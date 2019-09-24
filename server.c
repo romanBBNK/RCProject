@@ -9,176 +9,121 @@
 #include <stdio.h>
 //#define PORT "58000"
 
-char* ip;
 char* port;
 
 static void parseArgs(long argc, char* const argv[]){
 	long opt;
 	opterr = 0;
 
-	while ( (opt = getopt(argc, argv, "n:p:")) != -1){
+	port = "58000";
+	while ( (opt = getopt(argc, argv, "p:")) != -1){
 		switch (opt){
 			
-			case 'n':
-				ip = optarg;
-				break;
 			case 'p':
 				port = optarg;
 				break;
 			case '?':
 			default:
+				//opterr++;
+				port = "58000";
 				break;
 		}
 	}
 }
 
-void reg(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer) {
-	n = sendto(fd, buffer, strlen(buffer), 0, res->ai_addr, res->ai_addrlen);
-	if(n == -1)
-		exit(1);
+void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
+	parse = strtok(NULL, " ");
 
-	memset(buffer, '\0', sizeof(char)*128);
-
-	addrlen = sizeof(addr);
-	n = recvfrom(fd, buffer, 128, 0, (struct sockaddr*) &addr, &addrlen);
-	if(n == -1)
-		exit(1);
-
-	write(1, buffer, n);
+	write(1,"REG",4);
 	write(1, "\n", 1);
+
+	if( 10000 < atoi(parse)  && atoi(parse) < 99999 ) {
+		n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
+	}
+	else {
+		n=sendto(fd,"NOK",3,0,(struct sockaddr*) &addr, addrlen);
+	}
+	if(n==-1)
+		exit(1);
 }
 
-void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char buffer[]) {
-	n = sendto(fd, buffer, strlen(buffer), 0, res->ai_addr, res->ai_addrlen);
-	if(n == -1)
-		exit(1);
-
-	memset(buffer, '\0', sizeof(char)*128);
-
-	addrlen = sizeof(addr);
-	n = recvfrom(fd, buffer, 128, 0, (struct sockaddr*) &addr, &addrlen);
-	if(n == -1)
-		exit(1);
-
-	write(1, buffer, n);
+void topic_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
+	//////// Lista de tópicos ////////////
+	write(1,"Lista de topicos",16);
 	write(1, "\n", 1);
+	//////// Lista de tópicos ////////////
+	n=sendto(fd,"Lista de topicos",16,0,(struct sockaddr*) &addr, addrlen);
+	if(n==-1)
+		exit(1);
 }
 
-void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char userID[], char *topic) {
-	scanf("%s", topic);
-	strcat(buffer, "PTP ");
-	strcat(buffer, userID);
-	strcat(buffer, " ");
-	strcat(buffer, topic);
-	strcat(buffer, "\n");
-
-	n = sendto(fd, buffer, strlen(buffer), 0, res->ai_addr, res->ai_addrlen);
-	if(n == -1)
-		exit(1);
-
-	memset(buffer, '\0', sizeof(char)*128);
-	memset(topic, '\0', sizeof(char)*10);
-
-	addrlen = sizeof(addr);
-	n = recvfrom(fd, buffer, 128, 0, (struct sockaddr*) &addr, &addrlen);
-	if(n == -1)
-		exit(1);
-
-	write(1, buffer, n);
-	write(1, "\n", 1);
+void topic_propose(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
+	parse = strtok(NULL, " "); // parse = userID
+	parse = strtok(NULL, " "); // parse = topic
+	
+	n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
 }
 
-void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *topic) {
-	scanf("%s", topic);
-	strcat(buffer, "LQU ");
-	strcat(buffer, topic);
-	strcat(buffer, "\n");
-
-	n = sendto(fd, buffer, strlen(buffer), 0, res->ai_addr, res->ai_addrlen);
-	if(n == -1)
-		exit(1);
-
-	memset(buffer, '\0', sizeof(char)*128);
-	memset(topic, '\0', sizeof(char)*10);
-
-	addrlen = sizeof(addr);
-	n = recvfrom(fd, buffer, 128, 0, (struct sockaddr*) &addr, &addrlen);
-	if(n == -1)
-		exit(1);
-
-	write(1, buffer, n);
-	write(1, "\n", 1);
+void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
+	parse = strtok(NULL, " "); // parse = topic
+	
+	n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
 }
 
 int main(int argc, char *argv[]){
 
-	//UDP inicialization
 	int fd, addrlen, n;
 	struct addrinfo hints, *res;
 	struct sockaddr_in addr;
 	char *buffer = (char *)malloc(128*sizeof(char));
-	char *topic = (char *)malloc(10*sizeof(char));
+
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family=AF_INET;
 	hints.ai_socktype=SOCK_DGRAM;
-	hints.ai_flags=AI_NUMERICSERV;
-
-	char hostname[128];
-	gethostname(hostname, 128);
-	ip = hostname;
-	port = "58000";
+	hints.ai_flags=AI_PASSIVE|AI_NUMERICSERV;
 
 	parseArgs(argc, (char** const)argv);
 
-	n = getaddrinfo(ip, port, &hints, &res);
-	if(n != 0)
+	n=getaddrinfo(NULL,port,&hints,&res);
+
+	if(n!=0)
 		exit(1);
 
-	fd=socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-	if(fd == -1)
+	fd=socket(res->ai_family,res->ai_socktype,res->ai_protocol);
+	if(fd==-1)
 		exit(1);
 
-	char command[100];
-	char userID[5];
+	n=bind(fd,res->ai_addr,res->ai_addrlen);
+	if(n==-1)
+		exit(1);
 
-	scanf("%s", command);
-	while (strcmp(command, "exit") != 0){
+	addrlen=sizeof(addr);
+
+	char *parse;
+
+	while(1) {
 
 		memset(buffer, '\0', sizeof(char)*128);
 
-		if ( (strcmp(command, "register") == 0) || (strcmp(command, "reg") == 0) ){
-			scanf("%s", userID);
-			strcat(buffer, "REG ");
-			strcat(buffer, userID);
-			strcat(buffer, "\n");
-			reg(fd, addrlen, n, res, addr, buffer);
+		n=recvfrom(fd,buffer,128,0,(struct sockaddr*) &addr, &addrlen);
+		if(n==-1)
+			exit(1);
 
-		} else if ( (strcmp(command, "topic_list") == 0) || (strcmp(command, "tl") == 0)){
-			strcat(buffer, "LTP ");
-			strcat(buffer, "\n");
-			topic_list(fd, addrlen, n, res, addr, buffer);
-		} else if (strcmp(command, "topic_select") == 0){
-			
-		} else if (strcmp(command, "ts") == 0){
-			
-		} else if ( (strcmp(command, "topic_propose") == 0) || (strcmp(command, "tp") == 0)){
-			topic_propose(fd, addrlen, n, res, addr, buffer, userID, topic);
-		} else if ( (strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)){
-			question_list(fd, addrlen, n, res, addr, buffer, topic);
-		} else if (strcmp(command, "question_get") == 0){
-			
-		} else if (strcmp(command, "qg") == 0){
-			
-		} else if ( (strcmp(command, "question_submit") == 0) || (strcmp(command, "qs") == 0)){
-			
-		} else if ( (strcmp(command, "answer_submit") == 0) || (strcmp(command, "as") == 0)){
-			
+		parse = strtok(buffer, " ");
+
+		if ((strcmp(buffer, "REG") == 0)){
+			validReg(fd, addrlen, n, addr, buffer, parse);
+		} else if ((strcmp(buffer, "LTP") == 0)){
+			topic_list(fd, addrlen, n, addr, buffer, parse);
+		} else if ((strcmp(buffer, "PTP") == 0)){
+			topic_propose(fd, addrlen, n, addr, buffer, parse);
+		} else if ((strcmp(buffer, "LQU") == 0)){
+			question_list(fd, addrlen, n, addr, buffer, parse);
 		}
-		scanf("%s", command);
 	}
 
-	free(topic);
 	free(buffer);
+	free(parse);
 	freeaddrinfo(res);
 	close(fd);
 
