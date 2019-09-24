@@ -34,7 +34,7 @@ static void parseArgs(long argc, char* const argv[]){
 void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
 	parse = strtok(NULL, " ");
 
-	write(1,"REG",4);
+	write(1,"REG",3);
 	write(1, "\n", 1);
 
 	if( 10000 < atoi(parse)  && atoi(parse) < 99999 ) {
@@ -101,23 +101,33 @@ int main(int argc, char *argv[]){
 
 	char *parse;
 
+	int max = fd + 1;
+	fd_set rset;
+	FD_ZERO(&rset);
+
 	while(1) {
 
 		memset(buffer, '\0', sizeof(char)*128);
 
-		n=recvfrom(fd,buffer,128,0,(struct sockaddr*) &addr, &addrlen);
-		if(n==-1)
-			exit(1);
+		FD_SET(fd, &rset);
+
+		select(max, &rset, NULL, NULL, NULL);
+
+		if(FD_ISSET(fd, &rset)) {
+			n=recvfrom(fd,buffer,128,0,(struct sockaddr*) &addr, &addrlen);
+			if(n==-1)
+				exit(1);
+		}
 
 		parse = strtok(buffer, " ");
 
-		if ((strcmp(buffer, "REG") == 0)){
+		if ((strcmp(parse, "REG") == 0)){
 			validReg(fd, addrlen, n, addr, buffer, parse);
-		} else if ((strcmp(buffer, "LTP") == 0)){
+		} else if ((strcmp(parse, "LTP") == 0)){
 			topic_list(fd, addrlen, n, addr, buffer, parse);
-		} else if ((strcmp(buffer, "PTP") == 0)){
+		} else if ((strcmp(parse, "PTP") == 0)){
 			topic_propose(fd, addrlen, n, addr, buffer, parse);
-		} else if ((strcmp(buffer, "LQU") == 0)){
+		} else if ((strcmp(parse, "LQU") == 0)){
 			question_list(fd, addrlen, n, addr, buffer, parse);
 		}
 	}
