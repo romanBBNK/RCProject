@@ -1,7 +1,7 @@
 subsystem:
 	cd Server && $(MAKE)
-	cd Client && $(MAKE)
+	cd User && $(MAKE)
 	
 clean:
 	cd Server && $(MAKE) clean
-	cd Client && $(MAKE) clean
+	cd User && $(MAKE) clean
