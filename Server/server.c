@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <stdio.h>
 //#define PORT "58000"
+#define BUFFERSIZE 128
 
 
 /*
@@ -50,65 +51,6 @@ struct topic* topicList = NULL;
 struct topic* topicListEnd = NULL;
 int topic_counter = 0;
 
-static void parseArgs(long argc, char* const argv[]){
-	long opt;
-	opterr = 0;
-
-	port = "58000";
-	while ( (opt = getopt(argc, argv, "p:")) != -1){
-		switch (opt){
-			
-			case 'p':
-				port = optarg;
-				break;
-			case '?':
-			default:
-				//opterr++;
-				port = "58000";
-				break;
-		}
-	}
-}
-
-void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
-	parse = strtok(NULL, " ");
-
-	write(1,"REG",3);
-	write(1, "\n", 1);
-
-	if( 10000 < atoi(parse)  && atoi(parse) < 99999 ) {
-		n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
-	}
-	else {
-		n=sendto(fd,"NOK",3,0,(struct sockaddr*) &addr, addrlen);
-	}
-	if(n==-1)
-		exit(1);
-}
-
-void topic_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
-	//////// Lista de tópicos ////////////
-	write(1,"Lista de topicos",16);
-	write(1, "\n", 1);
-	//////// Lista de tópicos ////////////
-	n=sendto(fd,"Lista de topicos",16,0,(struct sockaddr*) &addr, addrlen);
-	if(n==-1)
-		exit(1);
-}
-
-void topic_propose(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
-	parse = strtok(NULL, " "); // parse = userID
-	parse = strtok(NULL, " "); // parse = topic
-	
-	n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
-}
-
-void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
-	parse = strtok(NULL, " "); // parse = topic
-	
-	n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
-}
-
 int retrieveStoredData(){
     /*
      * Retrieves stored data from the txt files.
@@ -122,7 +64,7 @@ void dataInit(){
      */
 }
 
-void addNewTopic(char *Name, char *Author){
+char* addNewTopic(char *Name, char *Author){
     /*
      * Appends a new topic to the end of the topic list.
      */
@@ -142,6 +84,8 @@ void addNewTopic(char *Name, char *Author){
         topicListEnd->next = newTopic;
         topicListEnd = newTopic;
     }
+
+    return "OK";
 }
 
 struct topic* getTopic(int topicNumber, char *Name){
@@ -221,12 +165,104 @@ struct question* getQuestion(struct topic* parentTopic, int topicNumber, char *t
     return NULL;
 }
 
+static void parseArgs(long argc, char* const argv[]){
+	long opt;
+	opterr = 0;
+
+	port = "58000";
+	while ( (opt = getopt(argc, argv, "p:")) != -1){
+		switch (opt){
+			
+			case 'p':
+				port = optarg;
+				break;
+			case '?':
+			default:
+				//opterr++;
+				port = "58000";
+				break;
+		}
+	}
+}
+
+void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
+	parse = strtok(NULL, "\n");
+
+	if( 10000 < atoi(parse)  && atoi(parse) < 99999 ) {
+		write(1,"user: ",6);
+		write(1, parse, 6);
+		write(1, "\n", 1);
+		n=sendto(fd,"RGR OK\n",7,0,(struct sockaddr*) &addr, addrlen);
+	}
+	else {
+		write(1,"user does not exist\n",20);
+		n=sendto(fd,"RGR NOK\n",8,0,(struct sockaddr*) &addr, addrlen);
+	}
+	if(n==-1)
+		exit(1);
+}
+
+void topic_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
+	//////// Lista de tópicos ////////////
+	write(1,"List topics\n",12);
+	//////// Lista de tópicos ////////////
+	n=sendto(fd,"Lista de topicos",16,0,(struct sockaddr*) &addr, addrlen);
+	if(n==-1)
+		exit(1);
+}
+
+void topic_propose(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
+	char *userID;
+	userID = strtok(NULL, " "); // parse = userID
+	parse = strtok(NULL, "\n"); // parse = topic
+
+	char *status = addNewTopic(parse, userID);
+	
+	if ((strcmp(status, "OK") == 0)) {
+		write(1, "Topic ", 6);
+		write(1, parse, strlen(parse));
+		write(1, " was successfully created by ", 29);
+		write(1, userID, 5);
+		write(1, "\n", 1);
+		n=sendto(fd,"PTR OK\n",6,0,(struct sockaddr*) &addr, addrlen);
+	} else if ((strcmp(status, "DUP") == 0)) {
+		write(1, "Topic ", 6);
+		write(1, parse, strlen(parse));
+		write(1, " already exists\n", 16);
+		n=sendto(fd,"PTR DUP\n",7,0,(struct sockaddr*) &addr, addrlen);
+	} else if ((strcmp(status, "FUL") == 0)) {
+		write(1, "Topic list is full\n", 19);
+		n=sendto(fd,"PTR FUL\n",7,0,(struct sockaddr*) &addr, addrlen);
+	} else {
+		write(1, "Topic ", 6);
+		write(1, parse, strlen(parse));
+		write(1, " has not been created\n", 22);
+		n=sendto(fd,"PTR NOK\n",7,0,(struct sockaddr*) &addr, addrlen);
+	}
+}
+
+void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
+	parse = strtok(NULL, "\n"); // parse = topic
+
+	//////// Lista de tópicos ////////////
+	write(1,"List qusetions for topic: ",26);
+	write(1, parse, strlen(parse));
+	write(1,"\n",1);
+	//////// Lista de tópicos ////////////
+
+	n=sendto(fd,"Lista de topicos",16,0,(struct sockaddr*) &addr, addrlen);
+	if(n==-1)
+		exit(1);
+	
+	n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
+}
+
 int main(int argc, char *argv[]){
 
 	int fd, addrlen, n;
 	struct addrinfo hints, *res;
 	struct sockaddr_in addr;
-	char *buffer = (char *)malloc(128*sizeof(char));
+	char *buffer = (char *)malloc(BUFFERSIZE*sizeof(char));
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family=AF_INET;
@@ -262,14 +298,14 @@ int main(int argc, char *argv[]){
 
 	while(1) {
 
-		memset(buffer, '\0', sizeof(char)*128);
+		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
 		FD_SET(fd, &rset);
 
 		select(max, &rset, NULL, NULL, NULL);
 
 		if(FD_ISSET(fd, &rset)) {
-			n=recvfrom(fd,buffer,128,0,(struct sockaddr*) &addr, &addrlen);
+			n=recvfrom(fd,buffer,BUFFERSIZE,0,(struct sockaddr*) &addr, &addrlen);
 			if(n==-1)
 				exit(1);
 		}
