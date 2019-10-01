@@ -33,7 +33,7 @@ static void parseArgs(long argc, char* const argv[]){
 	}
 }
 
-void reg(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char userID[]) {
+void reg(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *userID) {
 	n = sendto(fd, buffer, strlen(buffer), 0, res->ai_addr, res->ai_addrlen);
 	if(n == -1)
 		exit(1);
@@ -57,7 +57,7 @@ void reg(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in ad
 	}
 }
 
-void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char buffer[]) {
+void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char **topicList) {
 	n = sendto(fd, buffer, strlen(buffer), 0, res->ai_addr, res->ai_addrlen);
 	if(n == -1)
 		exit(1);
@@ -69,12 +69,29 @@ void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockadd
 	if(n == -1)
 		exit(1);
 
-	write(1, buffer, n);
-	write(1, "\n", 1);
+	write(1, "available topics:\n", 18);
+
+	int i = 0;
+	parse = strtok(buffer, " ");
+	parse = strtok(NULL, " ");
+	int size = atoi(parse);
+	while(i < size) {
+		i++;
+		sprintf(parse, "%d", i);
+		write(1, parse, strlen(parse));
+		write(1, " - ", 3);
+		parse = strtok(NULL, ":");
+		write(1, parse, strlen(parse));
+		write(1, "(proposed by ", 13);
+		topicList[i] = (char*)malloc(sizeof(char)*(strlen(parse) + 1));
+		strcpy(topicList[i], parse);
+		parse = strtok(NULL, " \n");
+		write(1, parse, strlen(parse));
+		write(1, ")\n", 2);
+	}
 }
 
-void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char userID[], char *topic) {
-	scanf("%s", topic);
+void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *userID, char *topic) {
 	strcat(buffer, "PTP ");
 	strcat(buffer, userID);
 	strcat(buffer, " ");
@@ -108,7 +125,6 @@ void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 }
 
 void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *topic) {
-	scanf("%s", topic);
 	strcat(buffer, "LQU ");
 	strcat(buffer, topic);
 	strcat(buffer, "\n");
@@ -126,7 +142,6 @@ void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 		exit(1);
 
 	write(1, buffer, n);
-	write(1, "\n", 1);
 }
 
 int main(int argc, char *argv[]){
@@ -136,8 +151,10 @@ int main(int argc, char *argv[]){
 	struct addrinfo hints, *res;
 	struct sockaddr_in addr;
 	char *buffer = (char *)malloc(BUFFERSIZE*sizeof(char));
+	char** topicList = (char**)malloc(99*sizeof(char*));
 	char *topic = (char *)malloc(10*sizeof(char));
-	char *topic_number = (char *)malloc(2*sizeof(char));
+	int topic_number;
+	char *userID = (char *)malloc(5*sizeof(char));
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family=AF_INET;
 	hints.ai_socktype=SOCK_DGRAM;
@@ -150,7 +167,8 @@ int main(int argc, char *argv[]){
 
 	parseArgs(argc, (char** const)argv);
 
-	n = getaddrinfo(ip, port, &hints, &res);
+	//n = getaddrinfo(ip, port, &hints, &res);
+	n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
 	if(n != 0)
 		exit(1);
 
@@ -161,7 +179,6 @@ int main(int argc, char *argv[]){
 	char *parse;
 
 	char command[100];
-	char userID[5];
 
 	scanf("%s", command);
 	while (strcmp(command, "exit") != 0){
@@ -178,24 +195,20 @@ int main(int argc, char *argv[]){
 		} else if ( (strcmp(command, "topic_list") == 0) || (strcmp(command, "tl") == 0)){
 			strcat(buffer, "LTP ");
 			strcat(buffer, "\n");
-			topic_list(fd, addrlen, n, res, addr, buffer);
+			topic_list(fd, addrlen, n, res, addr, buffer, parse, topicList);
 		} else if (strcmp(command, "topic_select") == 0){
 			memset(topic, '\0', sizeof(char)*10);
-			memset(topic_number, '\0', sizeof(char)*2);
 			scanf("%s", topic);
 		} else if (strcmp(command, "ts") == 0){
 			memset(topic, '\0', sizeof(char)*10);
-			memset(topic_number, '\0', sizeof(char)*2);
-			scanf("%s", topic_number);
+			scanf("%d", &topic_number);
+			strcat(topic, topicList[topic_number]);
 		} else if ( (strcmp(command, "topic_propose") == 0) || (strcmp(command, "tp") == 0)){
+			memset(topic, '\0', sizeof(char)*10);
+			scanf("%s", topic);
 			topic_propose(fd, addrlen, n, res, addr, buffer, parse, userID, topic);
 		} else if ( (strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)){
-			if (strlen(topic) > 0)
-				question_list(fd, addrlen, n, res, addr, buffer, parse, topic);
-			else if (strlen(topic_number) > 0)
-				question_list(fd, addrlen, n, res, addr, buffer, parse, topic_number);
-			else
-				write(1,"Topic not defined yet\n", 22);
+			question_list(fd, addrlen, n, res, addr, buffer, parse, topic);
 		} else if (strcmp(command, "question_get") == 0){
 			
 		} else if (strcmp(command, "qg") == 0){
@@ -208,6 +221,8 @@ int main(int argc, char *argv[]){
 		scanf("%s", command);
 	}
 
+	free(userID);
+	free(topicList);
 	free(topic_number);
 	free(topic);
 	free(buffer);
