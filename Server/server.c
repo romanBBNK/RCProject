@@ -27,7 +27,6 @@ struct question{
     char *title;
     int number;
     int replies_number;
-    int author;
     char *textFilePath;
     char *imageFilePath;
     struct answer* answers;
@@ -37,7 +36,7 @@ struct question{
 struct topic{
     char *name;
     int number;
-    int author;
+    char *author;
     int question_counter;
     struct question* questions;
     struct question* lastQuestion;
@@ -66,28 +65,17 @@ void dataInit(){
      */
 }
 
-int addNewTopic(char *Name, int Author){
+char* addNewTopic(char *Name, char *Author){
     /*
      * Appends a new topic to the end of the topic list.
      */
     struct topic* newTopic = (struct topic*) malloc(sizeof(struct topic));
-    struct topic* current;
-
-    if(topic_counter==99)
-        return -1;
-    if(topicList!=NULL){
-        current = topicList;
-        while(current!=NULL){
-            if(strcmp(current->name, Name) == 0)
-                return -1;
-            current = current->next;
-        }
-    }
-
     topic_counter++;
-    newTopic->name = Name;
+    newTopic->name = (char *)malloc(strlen(Name)*sizeof(char));
+    strcpy(newTopic->name, Name);
     newTopic->number = topic_counter;
-    newTopic->author = Author;
+    newTopic->author = (char *)malloc(strlen(Author)*sizeof(char));
+    strcpy(newTopic->author, Author);
     newTopic->question_counter = 0;
     newTopic->questions = NULL;
     newTopic->lastQuestion = NULL;
@@ -100,7 +88,7 @@ int addNewTopic(char *Name, int Author){
         topicListEnd = newTopic;
     }
 
-    return 0;
+    return "OK";
 }
 
 struct topic* getTopic(int topicNumber, char *Name){
@@ -127,31 +115,15 @@ struct topic* getTopic(int topicNumber, char *Name){
     return NULL;
 }
 
-int addNewQuestion(int topicNumber, char *topicName, char *title, int author, char *textFilePath, char *imageFilePath){
+void addNewQuestion(int topicNumber, char *topicName, char *title, char *textFilePath, char *imageFilePath){
 
     struct topic* parentTopic = getTopic(topicNumber, topicName);
     struct question* newQuestion = (struct question*) malloc(sizeof(struct question));
-    struct question* current;
-
-    //Checks if the questions are full or if such a question already exists
-    if(parentTopic->question_counter==99)
-        return -1;
-    if(parentTopic->questions != NULL){
-        current = parentTopic->questions;
-        while(current!=NULL){
-            if(strcmp(current->title, title) == 0)
-                return -1;
-            current = current->next;
-        }
-    }
-
-
 
     //Sets necessary initial values
     newQuestion->title = title;
     newQuestion->number = parentTopic->question_counter + 1;
     newQuestion->replies_number = 0;
-    newQuestion->author = author;
     newQuestion->textFilePath = textFilePath;
     newQuestion->imageFilePath = imageFilePath;
     newQuestion->answers = NULL;
@@ -166,7 +138,6 @@ int addNewQuestion(int topicNumber, char *topicName, char *title, int author, ch
         (parentTopic->lastQuestion)->next = newQuestion;
         parentTopic->lastQuestion = newQuestion;
     }
-    return 0;
 }
 
 struct question* getQuestion(struct topic* parentTopic, int topicNumber, char *topicName, char *questionTitle, int questionNumber){
@@ -217,6 +188,19 @@ static void parseArgs(long argc, char* const argv[]){
 	}
 }
 
+void getTopicList(char *buffer){
+
+    struct topic* current;
+    current = topicList;
+    while(current!=NULL){
+        strcat(buffer, " ");
+        strcat(buffer, current->name);
+        strcat(buffer, ":");
+        strcat(buffer, current->author);
+        current = current->next;
+    }
+}
+
 void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
 	parse = strtok(NULL, "\n");
 
@@ -234,35 +218,21 @@ void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer,
 		exit(1);
 }
 
-void topic_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
+void topic_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char count[]) {
 	write(1,"List topics\n",12);
 
+    sprintf(count, "%d", topic_counter);
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
-
 	strcat(buffer, "LTR ");
-    sprintf(parse, "%d", topic_counter);
-    strcat(buffer, parse);
+
+    strcat(buffer, count);
 
 	getTopicList(buffer);
+	strcat(buffer, "\n");
 
 	n=sendto(fd,buffer,strlen(buffer),0,(struct sockaddr*) &addr, addrlen);
 	if(n==-1)
 		exit(1);
-}
-
-void getTopicList(char *buffer){
-
-    struct topic* current;
-
-    current = topicList;
-    while(current!=NULL){
-        strcat(buffer, " ");
-        strcat(buffer, current->name);
-        strcat(buffer, ":");
-        strcat(buffer, current->author);
-
-        current = current->next;
-    }
 }
 
 void topic_propose(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
@@ -311,31 +281,6 @@ void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *bu
 	n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
 }
 
-int getQuestionList(char *buffer, char *topicName){
-
-    struct topic* parentTopic;
-    struct question* current;
-
-    int questionsRead = 0;
-    parentTopic = getTopic(0, topicName);
-
-    memset(buffer, 0, BUFFERSIZE);
-    strcat(buffer, "LQR ");
-    strcat(buffer, parentTopic->question_counter);
-
-    current = parentTopic->questions;
-    while(current!=NULL){
-        strcat(buffer, " ");
-        strcat(buffer, current->title);
-        strcat(buffer, ":");
-        strcat(buffer, current->author);
-        questionsRead++;
-        current = current->next;
-    }
-
-    return questionsRead;
-
-}
 
 int main(int argc, char *argv[]){
 
@@ -343,6 +288,7 @@ int main(int argc, char *argv[]){
 	struct addrinfo hints, *res;
 	struct sockaddr_in addr;
 	char *buffer = (char *)malloc(BUFFERSIZE*sizeof(char));
+	char count[2] = "";
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family=AF_INET;
@@ -390,12 +336,12 @@ int main(int argc, char *argv[]){
 				exit(1);
 		}
 
-		parse = strtok(buffer, " ");
+		parse = strtok(buffer, " \n");
 
 		if ((strcmp(parse, "REG") == 0)){
 			validReg(fd, addrlen, n, addr, buffer, parse);
 		} else if ((strcmp(parse, "LTP") == 0)){
-			topic_list(fd, addrlen, n, addr, buffer, parse);
+			topic_list(fd, addrlen, n, addr, buffer, count);
 		} else if ((strcmp(parse, "PTP") == 0)){
 			topic_propose(fd, addrlen, n, addr, buffer, parse);
 		} else if ((strcmp(parse, "LQU") == 0)){
