@@ -27,6 +27,7 @@ struct question{
     char *title;
     int number;
     int replies_number;
+    int author;
     char *textFilePath;
     char *imageFilePath;
     struct answer* answers;
@@ -113,7 +114,7 @@ struct topic* getTopic(int topicNumber, char *Name){
     return NULL;
 }
 
-void addNewQuestion(int topicNumber, char *topicName, char *title, char *textFilePath, char *imageFilePath){
+void addNewQuestion(int topicNumber, char *topicName, char *title, int author, char *textFilePath, char *imageFilePath){
 
     struct topic* parentTopic = getTopic(topicNumber, topicName);
     struct question* newQuestion = (struct question*) malloc(sizeof(struct question));
@@ -122,6 +123,7 @@ void addNewQuestion(int topicNumber, char *topicName, char *title, char *textFil
     newQuestion->title = title;
     newQuestion->number = parentTopic->question_counter + 1;
     newQuestion->replies_number = 0;
+    newQuestion->author = author;
     newQuestion->textFilePath = textFilePath;
     newQuestion->imageFilePath = imageFilePath;
     newQuestion->answers = NULL;
@@ -279,6 +281,32 @@ int getTopicList(char *buffer){
     }
 
     return topicsRead;
+}
+
+int getQuestionList(char *buffer, char *topicName){
+
+    struct topic* parentTopic;
+    struct question* current;
+
+    int questionsRead = 0;
+    parentTopic = getTopic(0, topicName);
+
+    memset(buffer, 0, BUFFERSIZE);
+    strcat(buffer, "LQR ");
+    strcat(buffer, parentTopic->question_counter);
+
+    current = parentTopic->questions;
+    while(current!=NULL){
+        strcat(buffer, " ");
+        strcat(buffer, current->title);
+        strcat(buffer, ":");
+        strcat(buffer, current->author);
+        questionsRead++;
+        current = current->next;
+    }
+
+    return questionsRead;
+
 }
 
 int main(int argc, char *argv[]){
