@@ -9,6 +9,7 @@
 #include <stdio.h>
 //#define PORT "58000"
 #define BUFFERSIZE 128
+#define MAXMSGSIZE 2048
 
 
 /*
@@ -35,7 +36,7 @@ struct question{
 struct topic{
     char *name;
     int number;
-    char *author;
+    int author;
     int question_counter;
     struct question* questions;
     struct question* lastQuestion;
@@ -64,7 +65,7 @@ void dataInit(){
      */
 }
 
-char* addNewTopic(char *Name, char *Author){
+char* addNewTopic(char *Name, int Author){
     /*
      * Appends a new topic to the end of the topic list.
      */
@@ -257,6 +258,29 @@ void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *bu
 	n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
 }
 
+int getTopicList(char *buffer){
+
+    struct topic* current;
+    int topicsRead = 0;
+
+    memset(buffer, 0, BUFFERSIZE);
+    strcat(buffer, "LTR ");
+    strcat(buffer, topic_counter);
+
+    current = topicList;
+    while(current!=NULL){
+        strcat(buffer, " ");
+        strcat(buffer, current->name);
+        strcat(buffer, ":");
+        strcat(buffer, current->author);
+        topicsRead++;
+
+        current = current->next;
+    }
+
+    return topicsRead;
+}
+
 int main(int argc, char *argv[]){
 
 	int fd, addrlen, n;
@@ -264,12 +288,18 @@ int main(int argc, char *argv[]){
 	struct sockaddr_in addr;
 	char *buffer = (char *)malloc(BUFFERSIZE*sizeof(char));
 
+	//TODO Actual declarations for the buffer necessary for passing lists of topics/etc.
+	char *putas = (char *)malloc(MAXMSGSIZE*sizeof(char));
+
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family=AF_INET;
 	hints.ai_socktype=SOCK_DGRAM;
 	hints.ai_flags=AI_PASSIVE|AI_NUMERICSERV;
 
+    getTopicList(putas);
+
 	parseArgs(argc, (char** const)argv);
+
 
 	/*
 	 * TODO: Add function calls to retrieve stored data into the file structures.
