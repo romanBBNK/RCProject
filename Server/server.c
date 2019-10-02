@@ -186,6 +186,21 @@ static void parseArgs(long argc, char* const argv[]){
 	}
 }
 
+void getTopicList(char *buffer){
+
+    struct topic* current;
+
+    current = topicList;
+    while(current!=NULL){
+        strcat(buffer, " ");
+        strcat(buffer, current->name);
+        strcat(buffer, ":");
+        strcat(buffer, current->author);
+
+        current = current->next;
+    }
+}
+
 void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
 	parse = strtok(NULL, "\n");
 
@@ -204,10 +219,17 @@ void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer,
 }
 
 void topic_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
-	//////// Lista de tópicos ////////////
 	write(1,"List topics\n",12);
-	//////// Lista de tópicos ////////////
-	n=sendto(fd,"Lista de topicos",16,0,(struct sockaddr*) &addr, addrlen);
+
+	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+
+	strcat(buffer, "LTR ");
+    sprintf(parse, "%d", topic_counter);
+    strcat(buffer, parse);
+
+	getTopicList(buffer);
+
+	n=sendto(fd,buffer,strlen(buffer),0,(struct sockaddr*) &addr, addrlen);
 	if(n==-1)
 		exit(1);
 }
@@ -258,28 +280,6 @@ void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *bu
 	n=sendto(fd,"OK",2,0,(struct sockaddr*) &addr, addrlen);
 }
 
-int getTopicList(char *buffer){
-
-    struct topic* current;
-    int topicsRead = 0;
-
-    memset(buffer, 0, BUFFERSIZE);
-    strcat(buffer, "LTR ");
-    strcat(buffer, topic_counter);
-
-    current = topicList;
-    while(current!=NULL){
-        strcat(buffer, " ");
-        strcat(buffer, current->name);
-        strcat(buffer, ":");
-        strcat(buffer, current->author);
-        topicsRead++;
-
-        current = current->next;
-    }
-
-    return topicsRead;
-}
 
 int main(int argc, char *argv[]){
 
@@ -288,18 +288,12 @@ int main(int argc, char *argv[]){
 	struct sockaddr_in addr;
 	char *buffer = (char *)malloc(BUFFERSIZE*sizeof(char));
 
-	//TODO Actual declarations for the buffer necessary for passing lists of topics/etc.
-	char *putas = (char *)malloc(MAXMSGSIZE*sizeof(char));
-
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family=AF_INET;
 	hints.ai_socktype=SOCK_DGRAM;
 	hints.ai_flags=AI_PASSIVE|AI_NUMERICSERV;
 
-    getTopicList(putas);
-
 	parseArgs(argc, (char** const)argv);
-
 
 	/*
 	 * TODO: Add function calls to retrieve stored data into the file structures.
