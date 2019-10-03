@@ -1,7 +1,7 @@
 # Makefile, versao 1
 # RC
 
-SOURCES = user.c
+SOURCES = tcp.c udp.c user.c
 SOURCES+=
 OBJS = $(SOURCES:%.c=%.o)
 CC   = gcc
@@ -15,6 +15,8 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $(TARGET) $(LDFLAGS) 
 
 user.o: user.c
+udp.o: udp.c udp.h
+tcp.o: tcp.c tcp.h
 
 $(OBJS):
 	$(CC) $(CFLAGS) -c -o $@ $<
