@@ -82,44 +82,52 @@ int main(int argc, char *argv[]){
 
 	addrlen=sizeof(addr);
 
-	char *parse;
 
-	int max = fd + 1;
-	fd_set rset;
-	FD_ZERO(&rset);
-
-	/*
-	fdTCP=socket(res->ai_family,res->ai_socktype,res->ai_protocol);
+	nTCP=getaddrinfo(NULL,port,&hintsTCP,&resTCP);
+	
+	fdTCP=socket(resTCP->ai_family,resTCP->ai_socktype,resTCP->ai_protocol);
 	if(fdTCP==-1)
 		exit(1);
 
-	nTCP=bind(fdTCP,res->ai_addr,res->ai_addrlen);
+	nTCP=bind(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
 	if(nTCP==-1)
 		exit(1);
 
+	if(listen(fdTCP,5)==-1)
+		exit(1);
 	addrlenTCP=sizeof(addrTCP);
-*/ 
+	
+	char *parse;
+	int max = 1;
+	if(fdTCP > fd) {
+		max += fdTCP;
+	} else {
+		max += fd;
+	}
+	fd_set rset;
+	FD_ZERO(&rset);
 
 	while(1) {
 
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
 		FD_SET(fd, &rset);
-
+		FD_SET(fdTCP, &rset);
 		select(max, &rset, NULL, NULL, NULL);
 
 		if(FD_ISSET(fd, &rset)) {
 			n=recvfrom(fd,buffer,BUFFERSIZE,0,(struct sockaddr*) &addr, &addrlen);
 			if(n==-1)
 				exit(1);
-		} else if (FD_ISSET(fd, &rset)){
-			if(listen(fd,5)==-1)
+		} else if (FD_ISSET(fdTCP, &rset)){
+			if((newfd=accept(fdTCP,(struct sockaddr*) &addrTCP, &addrlenTCP)) == -1)
 				exit(1);
-			if((newfd=accept(fd,(struct sockaddr*) &addr, &addrlen)) == -1)
-				exit(1);
-			n=read(newfd,buffer,strlen(buffer));
+
+			nTCP=read(newfd,buffer,sizeof(buffer));
 			if(n==-1)
 				exit(1);
+
+			close(newfd);
 		}
 
 		parse = strtok(buffer, " \n");
