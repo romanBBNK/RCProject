@@ -14,6 +14,11 @@
 #define BUFFERSIZE 128
 #define MAXMSGSIZE 2048
 
+/*
+ * Global variables to be used.
+ */
+
+
 static void parseArgs(long argc, char* const argv[]){
 	long opt;
 	opterr = 0;
@@ -60,6 +65,8 @@ int main(int argc, char *argv[]){
 	hintsTCP.ai_family=AF_INET;
 	hintsTCP.ai_socktype=SOCK_STREAM;
 	hintsTCP.ai_flags=AI_PASSIVE|AI_NUMERICSERV;
+
+	retrieveStoredData();
 
 	parseArgs(argc, (char** const)argv);
 

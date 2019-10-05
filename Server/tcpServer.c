@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include "tcpServer.h"
+#include "data.h"
 #define BUFFERSIZE 1000
 
 void question_get(int fd, int addrlen, int n, char *buffer, char *parse, int newfd){

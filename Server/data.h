@@ -1,27 +1,32 @@
 #ifndef DATA_H
 #define DATA_H 1
 
+
+char* port;
+struct topic* topicList;
+struct topic* topicListEnd;
+int topic_counter;
+
+
 /*
  * Declaration of necessary structures for storage of the forum contents.
  */
 struct answer {
     char *name;
+    char *author;
     int number;
-    char *textFilePath;
     char *imageFilePath;
     struct answer* next;
 };
-
 struct question{
     char *title;
+    char *author;
     int number;
     int replies_number;
-    char *textFilePath;
     char *imageFilePath;
     struct answer* answers;
     struct question* next;
 };
-
 struct topic{
     char *name;
     int number;
@@ -32,27 +37,27 @@ struct topic{
     struct topic* next;
 };
 
-
-/*
- * Global variables to be used.
- */
-char* port;
-struct topic* topicList;
-struct topic* topicListEnd;
-int topic_counter;
-
-int retrieveStoredData();
-
-void dataInit();
-
-char* addNewTopic(char *Name, char *Author);
-
-struct topic* getTopic(int topicNumber, char *Name);
-
-void addNewQuestion(int topicNumber, char *topicName, char *title, char *textFilePath, char *imageFilePath);
-
-struct question* getQuestion(struct topic* parentTopic, int topicNumber, char *topicName, char *questionTitle, int questionNumber);
-
+//Topic related functions
+struct topic* addNewTopic(char *Name, char *Author);
+struct topic* getTopic(char *Name);
 void getTopicList(char *buffer);
+
+//Question related functions
+struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imageFilePath);
+struct question* getQuestion(struct topic* parentTopic, char *topicName, char *questionTitle, int questionNumber);
+int getQuestionList(char *buffer, char *topicName);
+
+
+//Answer related functions
+//TODO Add answer functions for adding and getting answers
+struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *Author, char *imageFilePath);
+struct answer* getAnswer();
+int getAnswerList();
+
+//Miscellaneous functions
+int retrieveStoredData();
+int retrieveStoredQuestions(struct topic* currentTopic);
+int retrieveStoredAnswers(struct topic* currentTopic ,struct question* currentQuestion);
+void dataInit();
 
 #endif

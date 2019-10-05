@@ -12,34 +12,38 @@
 #define BUFFERSIZE 128
 #define MAXMSGSIZE 2048
 
-int retrieveStoredData(){
-    /*
-     * Retrieves stored data from the txt files.
-     */
-    return 0;
-}
-
-void dataInit(){
-    /*
-     * Initializes the necessary data structures. Add as necessary.
-     */
-}
-
-char* addNewTopic(char *Name, char *Author){
-    /*
-     * Appends a new topic to the end of the topic list.
-     */
+//Topic related questions
+struct topic* addNewTopic(char *Name, char *Author){
+    //Appends a new topic to the end of the topic list.
     struct topic* newTopic = (struct topic*) malloc(sizeof(struct topic));
+    struct topic* current;
+
+    //Checks if the topic list is full or if the title is duplicate
+    if(topic_counter==99)
+        return NULL;
+    if(topicList != NULL){
+        current = topicList;
+        while(current!=NULL){
+            if(strcmp(current->name, Name)==0)
+                return NULL;
+            current = current->next;
+        }
+    }
     topic_counter++;
+
     newTopic->name = (char *)malloc(strlen(Name)*sizeof(char));
     strcpy(newTopic->name, Name);
+
     newTopic->number = topic_counter;
+
     newTopic->author = (char *)malloc(strlen(Author)*sizeof(char));
     strcpy(newTopic->author, Author);
+
     newTopic->question_counter = 0;
     newTopic->questions = NULL;
     newTopic->lastQuestion = NULL;
     newTopic->next = NULL;
+
     if(topicList == NULL){
         topicList = newTopic;
         topicListEnd = topicList;
@@ -48,44 +52,67 @@ char* addNewTopic(char *Name, char *Author){
         topicListEnd = newTopic;
     }
 
-    return "OK";
+    return newTopic;
 }
-
-struct topic* getTopic(int topicNumber, char *Name){
+struct topic* getTopic(char *Name){
     /*
      * Accepts both topic number and name. If searching by name, give topicNumber = 0; Returns NULL if topic not found.
      */
     struct topic* current;
 
-    if(topicNumber!=0){
-        current = topicList;
-        while(current!=NULL) {
-            if (current->number == topicNumber)
-                return current;
-            current = current->next;
-        }
-    } else {
-        current = topicList;
-        while(current!=NULL) {
-            if (strcmp(current->name, Name) == 0)
-                return current;
-            current = current->next;
-        }
+    current = topicList;
+    while (current != NULL) {
+        if (strcmp(current->name, Name) == 0)
+            return current;
+        current = current->next;
     }
     return NULL;
 }
+void getTopicList(char *buffer){
 
-void addNewQuestion(int topicNumber, char *topicName, char *title, char *textFilePath, char *imageFilePath){
+    struct topic* current;
+    current = topicList;
+    while(current!=NULL){
+        strcat(buffer, " ");
+        strcat(buffer, current->name);
+        strcat(buffer, ":");
+        strcat(buffer, current->author);
+        current = current->next;
+    }
+}
 
-    struct topic* parentTopic = getTopic(topicNumber, topicName);
+
+//Question related functions
+struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imageFilePath){
+
     struct question* newQuestion = (struct question*) malloc(sizeof(struct question));
+    struct question* current;
+
+    //Checks if the question list is full or if the question is a duplicate
+    if(parentTopic->question_counter == 99)
+        return NULL;
+    if(parentTopic->questions != NULL){
+        current = parentTopic->questions;
+        while(current!=NULL){
+            if(strcmp(current->title, Title)==0)
+                return NULL;
+            current = current->next;
+        }
+    }
 
     //Sets necessary initial values
-    newQuestion->title = title;
+    newQuestion->title = (char *)malloc(strlen(Title)*sizeof(char));
+    strcpy(newQuestion->title, Title);
+
+    newQuestion->author = (char *)malloc(strlen(Author)*sizeof(char));
+    strcpy(newQuestion->author, Author);
+
     newQuestion->number = parentTopic->question_counter + 1;
     newQuestion->replies_number = 0;
-    newQuestion->textFilePath = textFilePath;
-    newQuestion->imageFilePath = imageFilePath;
+
+    newQuestion->imageFilePath = (char *)malloc(strlen(imageFilePath)*sizeof(char));
+    strcpy(newQuestion->imageFilePath, imageFilePath);
+
     newQuestion->answers = NULL;
     newQuestion->next = NULL;
 
@@ -97,10 +124,11 @@ void addNewQuestion(int topicNumber, char *topicName, char *title, char *textFil
     } else{
         (parentTopic->lastQuestion)->next = newQuestion;
         parentTopic->lastQuestion = newQuestion;
+        parentTopic->question_counter = parentTopic->question_counter +1;
     }
+    return newQuestion;
 }
-
-struct question* getQuestion(struct topic* parentTopic, int topicNumber, char *topicName, char *questionTitle, int questionNumber){
+struct question* getQuestion(struct topic* parentTopic, char *topicName, char *questionTitle, int questionNumber){
     /*
      * If parentTopic is specified, gets the question from the parentTopic instead of searching for the topic. If parentTopic is NULL, gets the topic through the same info as
      * getTopic() and then gets the question. Returns NULL if question not found.
@@ -110,7 +138,7 @@ struct question* getQuestion(struct topic* parentTopic, int topicNumber, char *t
     if(parentTopic != NULL){
         current = parentTopic->questions;
     } else {
-        current = (getTopic(topicNumber, topicName))->questions;
+        current = (getTopic(topicName))->questions;
     }
     if(questionNumber!=0){
         while(current!=NULL) {
@@ -127,16 +155,282 @@ struct question* getQuestion(struct topic* parentTopic, int topicNumber, char *t
     }
     return NULL;
 }
+int getQuestionList(char *buffer, char *topicName){
 
-void getTopicList(char *buffer){
+    struct topic* parentTopic;
+    struct question* current;
 
-    struct topic* current;
-    current = topicList;
+    int questionsRead = 0;
+    parentTopic = getTopic(topicName);
+
+    memset(buffer, 0, BUFFERSIZE);
+    strcat(buffer, "LQR ");
+    strcat(buffer, parentTopic->question_counter);
+
+    current = parentTopic->questions;
     while(current!=NULL){
         strcat(buffer, " ");
-        strcat(buffer, current->name);
+        strcat(buffer, current->title);
         strcat(buffer, ":");
         strcat(buffer, current->author);
+        questionsRead++;
         current = current->next;
     }
+
+    return questionsRead;
 }
+
+
+//Answer related functions
+struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *Author, char *imageFilePath){
+
+    struct answer* newAnswer = (struct answer*) malloc(sizeof(struct answer));
+    struct answer* current;
+
+    //Checks if the answer list is full or if the answer is a duplicate
+    if(parentQuestion->replies_number == 99)
+        return NULL;
+    if(parentQuestion->answers != NULL){
+        current = parentQuestion->answers;
+        while(current!=NULL){
+            if(strcmp(current->name, Name)==0)
+                return NULL;
+            current = current->next;
+        }
+    }
+
+    //Fills the necessary fields
+    newAnswer->name = (char *)malloc(strlen(Name)*sizeof(char));
+    strcpy(newAnswer->name, Name);
+
+    newAnswer->author = (char *)malloc(strlen(Author)*sizeof(char));
+    strcpy(newAnswer->author, Author);
+
+    newAnswer->number = parentQuestion->replies_number + 1;
+
+    newAnswer->imageFilePath = (char *)malloc(strlen(imageFilePath)*sizeof(char));
+    strcpy(newAnswer->imageFilePath, Name);
+
+    newAnswer->next = NULL;
+
+    //Adds to parent question
+    if(parentQuestion->replies_number == 0){
+        parentQuestion->answers = newAnswer;
+        parentQuestion->replies_number = parentQuestion->replies_number + 1;
+    } else{
+        newAnswer->next = (parentQuestion->answers);
+        (parentQuestion->answers)->next = newAnswer;
+        parentQuestion->replies_number = parentQuestion->replies_number + 1;
+    }
+
+    return newAnswer;
+}
+struct answer* getAnswer(){
+    //TODO
+    return 0;
+}
+int getAnswerList(){
+    //TODO
+    return 0;
+}
+
+
+//Miscellaneous functions
+int retrieveStoredData(){
+    /*
+     * Retrieves stored data from the txt files.
+     */
+
+            //TODO Read questions.txt
+                //TODO Per question, go into folder
+                    //TODO Add question info
+                    //TODO Read answers.txt
+                        //TODO Per answer, add it to the question
+
+    //Reads from topics.txt, path is relative for portability: ./Data/topics.txt
+    FILE *topicsFile;
+    char *readTopicName;
+    char *readTopicAuthor;
+    struct topic* currentTopic;
+    size_t nameSize = 12;
+    size_t readName;
+    size_t authorSize = 7;
+    size_t readAuthor;
+
+    readTopicName = (char *)malloc(12 * sizeof(char));
+    readTopicAuthor = (char *)malloc(7 * sizeof(char));
+
+    if((topicsFile = fopen("./Data/topics.txt", "r")) == NULL){
+        printf("Error reading topics.txt.\n");
+        exit(-1);
+    }
+    //Reads a topic and acts appropriately
+    while((readName = getline(&readTopicName, &nameSize, topicsFile)) != -1){
+        readAuthor = getline(&readTopicAuthor, &authorSize, topicsFile);
+
+        //Changes the /n of the string to a null terminator, \0
+        readTopicName[readName - 1] = '\0';
+        readTopicAuthor[readAuthor - 1] = '\0';
+
+        //Saves the topic and calls the function to pursue questions related to the topic
+        if( (currentTopic = addNewTopic(readTopicName, readTopicAuthor)) == NULL){
+            printf("Error adding topic to memory.\n");
+            exit(-1);
+        }
+        retrieveStoredQuestions(currentTopic);
+        printf("Topic %s successfully scanned to memory.\n", currentTopic->name);
+
+        //Resets the buffers used
+        memset(readTopicName, 0, 12);
+        memset(readTopicAuthor, 0, 7);
+    }
+
+    //Frees allocated memory and closes the file
+    free(readTopicAuthor);
+    free(readTopicName);
+    fclose(topicsFile);
+
+    return 0;
+}
+int retrieveStoredQuestions(struct topic* currentTopic){
+
+    //Reads from questions.txt, path is relative for portability: ./Data/<TopicName>/questions.txt
+    FILE *questionsFile;
+    char *questionsFilePath;
+    char *readQstTitle;
+    char *readQstAuthor;
+    char *readImgPath;
+    struct question* currentQuestion;
+    size_t titleSize = 12;
+    size_t readTitle;
+    size_t authorSize = 7;
+    size_t readAuthor;
+    size_t pathSize = 16;
+    size_t readImage;
+
+    questionsFilePath = (char *)malloc(40 * sizeof(char));
+    readQstTitle = (char *)malloc(12 * sizeof(char));
+    readQstAuthor = (char *)malloc(7 * sizeof(char));
+    readImgPath = (char *)malloc(16 * sizeof(char));
+
+    //Sets the filepath for the topic folder
+    strcpy(questionsFilePath, "./Data/");
+    strcat(questionsFilePath, currentTopic->name);
+    strcat(questionsFilePath, "/questions.txt");
+
+    //Opens questions.txt
+    if((questionsFile = fopen(questionsFilePath, "r")) == NULL){
+        printf("Error reading questions.txt.\n");
+        exit(-1);
+    }
+
+    //Reads a question and acts appropriately
+    while((readTitle = getline(&readQstTitle, &titleSize, questionsFile)) != -1){
+        readAuthor = getline(&readQstAuthor, &authorSize, questionsFile);
+        readImage = getline(&readImgPath, &pathSize, questionsFile);
+
+        //Changes the /n of the string to a null terminator, \0
+        readQstTitle[readTitle - 1] = '\0';
+        readQstAuthor[readAuthor - 1] = '\0';
+        readImgPath[readImage - 1] = '\0';
+
+        //Saves the question and calls the function to pursue answers related to the question
+        if( (currentQuestion = addNewQuestion(currentTopic, readQstTitle, readQstAuthor, readImgPath)) == NULL){
+            printf("Error adding question to memory.\n");
+            exit(-1);
+        }
+        retrieveStoredAnswers(currentTopic, currentQuestion);
+        printf("Question %s successfully scanned to memory.\n", currentQuestion->title);
+
+        //Resets the buffers used
+        memset(readQstTitle, 0, 12);
+        memset(readQstAuthor, 0, 7);
+        memset(readImgPath, 0, 16);
+    }
+
+    //Cleans up temporarily allocated memory and closes the file
+    free(readQstTitle);
+    free(readQstAuthor);
+    free(questionsFilePath);
+    free(readImgPath);
+    fclose(questionsFile);
+
+    return 0;
+}
+int retrieveStoredAnswers(struct topic* currentTopic, struct question* currentQuestion){
+
+    //Reads from answers.txt, path is relative for portability: ./Data/<TopicName>/<QuestionName>/answers.txt
+    FILE *answersFile;
+    char *answersFilePath;
+    char *readAnsName;
+    char *readAnsAuthor;
+    char *readImgPath;
+    struct answer* currentAnswer;
+    size_t nameSize = 15;
+    size_t readName;
+    size_t authorSize = 7;
+    size_t readAuthor;
+    size_t pathSize = 16;
+    size_t readImage;
+
+    answersFilePath = (char *)malloc(64 * sizeof(char));
+    readAnsName = (char *)malloc(15 * sizeof(char));
+    readAnsAuthor = (char *)malloc(7 * sizeof(char));
+    readImgPath = (char *)malloc(16 * sizeof(char));
+
+    //Sets the filepath for the question folder
+    strcpy(answersFilePath, "./Data/");
+    strcat(answersFilePath, currentTopic->name);
+    strcat(answersFilePath, "/");
+    strcat(answersFilePath, currentQuestion->title);
+    strcat(answersFilePath, "/answers.txt");
+
+    //Opens answers.txt
+    if((answersFile = fopen(answersFilePath, "r")) == NULL){
+        printf("Error reading answers.txt.\n");
+        exit(-1);
+    }
+
+    //Reads an answer and acts appropriately
+    while((readName = getline(&readAnsName, &nameSize, answersFile)) != -1){
+        readAuthor = getline(&readAnsAuthor, &authorSize, answersFile);
+        readImage = getline(&readImgPath, &pathSize, answersFile);
+
+        //Changes the /n of the string to a null terminator, \0
+        readAnsName[readName - 1] = '\0';
+        readAnsAuthor[readAuthor - 1] = '\0';
+        readImgPath[readImage - 1] = '\0';
+
+        //Saves the topic and calls the function to pursue questions related to the topic
+        if( (currentAnswer = addNewAnswer(currentQuestion, readAnsName, readAnsAuthor, readImgPath)) == NULL){
+            printf("Error adding answer to memory.\n");
+            exit(-1);
+        }
+        printf("Answer %s successfully scanned to memory.\n", currentAnswer->name);
+
+        //Resets the buffers used
+        memset(readAnsName, 0, 12);
+        memset(readAnsAuthor, 0, 7);
+        memset(readImgPath, 0, 16);
+    }
+
+    //Cleans up temporarily allocated memory and closes the file
+    free(readAnsName);
+    free(readAnsAuthor);
+    free(answersFilePath);
+    free(readImgPath);
+    fclose(answersFile);
+
+    return 0;
+}
+void dataInit(){
+    /*
+     * Initializes the necessary data structures. Add as necessary.
+     */
+}
+
+
+
+
+
+

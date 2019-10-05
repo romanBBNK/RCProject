@@ -1,4 +1,3 @@
-$answer1
-#01
-#ExampleAnswer1.txt
-#NULL
+ExQuest1_01
+34567
+NULL

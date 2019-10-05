@@ -1,6 +1,4 @@
-$ExTopic1
-#01
-#16969
-$ExTopic2
-#02
-#16969
+ExTopic1
+16969
+ExTopic2
+42069

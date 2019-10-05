@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include "udpServer.h"
+#include "data.h"
 #define BUFFERSIZE 1000
 
 void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
