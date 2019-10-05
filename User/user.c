@@ -71,8 +71,8 @@ int main(int argc, char *argv[]){
 
 	parseArgs(argc, (char** const)argv);
 
-	//n = getaddrinfo(ip, port, &hints, &res);
-	n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
+	n = getaddrinfo(ip, port, &hints, &res);
+	//n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
 	if(n != 0)
 		exit(1);
 
@@ -80,19 +80,11 @@ int main(int argc, char *argv[]){
 	if(fd == -1)
 		exit(1);
 
-	//nTCP = getaddrinfo(ip, port, &hints, &res);
-	nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
+	nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
+	//nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
 	if(nTCP != 0)
 		exit(1);
-
-	fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
-	if(fdTCP == -1)
-		exit(1);
-
-	nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
-	if(nTCP==-1)
-		exit(1);
-
+	
 	char *parse;
 
 	char command[100];
@@ -101,6 +93,7 @@ int main(int argc, char *argv[]){
 	int x;
 
 	scanf("%s", command);
+
 	while (strcmp(command, "exit") != 0){
 
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
@@ -130,12 +123,30 @@ int main(int argc, char *argv[]){
 		} else if ( (strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)){
 			question_list(fd, addrlen, n, res, addr, buffer, parse, topic);
 		} else if (strcmp(command, "question_get") == 0){
+			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+			if(fdTCP == -1)
+
+			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+			if(nTCP==-1)
+				exit(1);
 			scanf("%s", question);
 			question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, topic, question);
 		} else if (strcmp(command, "qg") == 0){
+			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+			if(fdTCP == -1)
+
+			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+			if(nTCP==-1)
+				exit(1);
 			scanf("%s", question_number);
 			qg(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, topic, question_number);
 		} else if ( (strcmp(command, "question_submit") == 0) || (strcmp(command, "qs") == 0)){
+			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+			if(fdTCP == -1)
+
+			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+			if(nTCP==-1)
+				exit(1);
 			x=0;
 			getchar();
 			while ((c=getchar()) != '\n'){
@@ -146,6 +157,12 @@ int main(int argc, char *argv[]){
 			imageFile = strtok(NULL, "\n");
 			question_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, imageFile);
 		} else if ( (strcmp(command, "answer_submit") == 0) || (strcmp(command, "as") == 0)){
+			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+			if(fdTCP == -1)
+
+			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+			if(nTCP==-1)
+				exit(1);
 			x=0;
 			getchar();
 			while ((c=getchar()) != '\n'){
@@ -161,11 +178,11 @@ int main(int argc, char *argv[]){
 
 	free(userID);
 	free(topicList);
-	free(topic_number);
 	free(topic);
 	free(buffer);
 	freeaddrinfo(res);
 	close(fd);
+	close(fdTCP);
 
 	return 0;
 }

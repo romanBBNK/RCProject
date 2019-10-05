@@ -32,7 +32,6 @@ void topic_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffe
 	write(1,"List topics\n",12);
 
     sprintf(count, "%d", topic_counter);
-	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 	strcat(buffer, "LTR ");
 
     strcat(buffer, count);
@@ -50,16 +49,16 @@ void topic_propose(int fd, int addrlen, int n, struct sockaddr_in addr, char *bu
 	userID = strtok(NULL, " "); // parse = userID
 	parse = strtok(NULL, "\n"); // parse = topic
 
-	char *status = addNewTopic(parse, userID);
+	addNewTopic(parse, userID);
 	
-	if ((strcmp(status, "OK") == 0)) {
-		write(1, "Topic ", 6);
+/*	if ((strcmp(status, "OK") == 0)) {
+*/		write(1, "Topic ", 6);
 		write(1, parse, strlen(parse));
 		write(1, " was successfully created by ", 29);
 		write(1, userID, 5);
 		write(1, "\n", 1);
 		n=sendto(fd,"PTR OK\n",6,0,(struct sockaddr*) &addr, addrlen);
-	} else if ((strcmp(status, "DUP") == 0)) {
+/*	} else if ((strcmp(status, "DUP") == 0)) {
 		write(1, "Topic ", 6);
 		write(1, parse, strlen(parse));
 		write(1, " already exists\n", 16);
@@ -72,7 +71,7 @@ void topic_propose(int fd, int addrlen, int n, struct sockaddr_in addr, char *bu
 		write(1, parse, strlen(parse));
 		write(1, " has not been created\n", 22);
 		n=sendto(fd,"PTR NOK\n",7,0,(struct sockaddr*) &addr, addrlen);
-	}
+	}*/
 }
 
 void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
