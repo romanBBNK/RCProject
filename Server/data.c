@@ -62,8 +62,9 @@ struct topic* getTopic(char *Name){
 
     current = topicList;
     while (current != NULL) {
-        if (strcmp(current->name, Name) == 0)
+        if (strcmp(current->name, Name) == 0){
             return current;
+        }
         current = current->next;
     }
     return NULL;
@@ -155,17 +156,22 @@ struct question* getQuestion(struct topic* parentTopic, char *topicName, char *q
     }
     return NULL;
 }
-int getQuestionList(char *buffer, char *topicName){
+void getQuestionList(char *buffer, char *topicName){
 
     struct topic* parentTopic;
     struct question* current;
 
-    int questionsRead = 0;
     parentTopic = getTopic(topicName);
 
-    memset(buffer, 0, BUFFERSIZE);
+    memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+
+    char count[2];
     strcat(buffer, "LQR ");
-    strcat(buffer, parentTopic->question_counter);
+    sprintf(count, "%d", parentTopic->question_counter);
+    strcat(buffer, count);
+
+
+    char num[2];
 
     current = parentTopic->questions;
     while(current!=NULL){
@@ -173,11 +179,11 @@ int getQuestionList(char *buffer, char *topicName){
         strcat(buffer, current->title);
         strcat(buffer, ":");
         strcat(buffer, current->author);
-        questionsRead++;
+        strcat(buffer, ":");
+        sprintf(num, "%d", current->number);
+        strcat(buffer, num);
         current = current->next;
     }
-
-    return questionsRead;
 }
 
 
