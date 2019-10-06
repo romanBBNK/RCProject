@@ -16,6 +16,11 @@ char* ip;
 char* port;
 
 static void parseArgs(long argc, char* const argv[]){
+	char hostname[128];
+	gethostname(hostname, 128);
+	ip = hostname;
+	port = "58000";
+
 	long opt;
 	opterr = 0;
 
@@ -64,11 +69,6 @@ int main(int argc, char *argv[]){
 	hintsTCP.ai_socktype=SOCK_STREAM;
 	hintsTCP.ai_flags=AI_NUMERICSERV;
 
-	char hostname[128];
-	gethostname(hostname, 128);
-	ip = hostname;
-	port = "58000";
-
 	parseArgs(argc, (char** const)argv);
 
 	n = getaddrinfo(ip, port, &hints, &res);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]){
 			reg(fd, addrlen, n, res, addr, buffer, parse, userID);
 
 		} else if ( (strcmp(command, "topic_list") == 0) || (strcmp(command, "tl") == 0)){
-			strcat(buffer, "LTP ");
+			strcat(buffer, "LTP");
 			strcat(buffer, "\n");
 			topic_list(fd, addrlen, n, res, addr, buffer, parse, topicList);
 		} else if (strcmp(command, "topic_select") == 0){
@@ -121,6 +121,8 @@ int main(int argc, char *argv[]){
 			scanf("%s", topic);
 			topic_propose(fd, addrlen, n, res, addr, buffer, parse, userID, topic);
 		} else if ( (strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)){
+			memset(topic, '\0', sizeof(char)*10);
+			scanf("%s", topic);
 			question_list(fd, addrlen, n, res, addr, buffer, parse, topic);
 		} else if (strcmp(command, "question_get") == 0){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);

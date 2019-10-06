@@ -111,12 +111,30 @@ void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 		exit(1);
 
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
-	memset(topic, '\0', sizeof(char)*10);
 
 	addrlen = sizeof(addr);
 	n = recvfrom(fd, buffer, BUFFERSIZE, 0, (struct sockaddr*) &addr, &addrlen);
 	if(n == -1)
 		exit(1);
 
-	write(1, buffer, n);
+	write(1, "available questions about ", 26);
+	write(1, topic, strlen(topic));
+	write(1,":\n",2);
+	memset(topic, '\0', sizeof(char)*10);
+
+	int i = 0;
+	parse = strtok(buffer, " ");
+	parse = strtok(NULL, " ");
+	int size = atoi(parse);
+	while(i < size) {
+		i++;
+		sprintf(parse, "%d", i);
+		write(1, parse, strlen(parse));
+		write(1, " - ", 3);
+		parse = strtok(NULL, ":");
+		write(1, parse, strlen(parse));
+		parse = strtok(NULL, ":");
+		parse = strtok(NULL, " \n");
+		write(1, "\n", 1);
+	}
 }
