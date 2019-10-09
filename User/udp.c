@@ -18,9 +18,12 @@ void reg(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in ad
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
 	addrlen = sizeof(addr);
+
 	n = recvfrom(fd, buffer, BUFFERSIZE, 0, (struct sockaddr*) &addr, &addrlen);
-	if(n == -1)
-		exit(1);
+	if (n == -1){
+		write(1, "timeout\n", 8);
+		return;
+	}
 
 	parse = strtok(buffer, " ");
 	parse = strtok(NULL, "\n");
@@ -30,6 +33,7 @@ void reg(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in ad
 		write(1, userID, 5);
 		write(1, "\" registered\n", 13);
 	} else {
+		memset(userID, '\0', sizeof(char)*5);
 		write(1, "User not registered\n", 20);
 	}
 }
@@ -43,8 +47,10 @@ void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockadd
 
 	addrlen = sizeof(addr);
 	n = recvfrom(fd, buffer, BUFFERSIZE, 0, (struct sockaddr*) &addr, &addrlen);
-	if(n == -1)
-		exit(1);
+	if (n == -1){
+		write(1, "timeout\n", 8);
+		return;
+	}
 
 	write(1, "available topics:\n", 18);
 
@@ -52,6 +58,9 @@ void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockadd
 	parse = strtok(buffer, " ");
 	parse = strtok(NULL, " ");
 	int size = atoi(parse);
+	if(size == 0) {
+		write(1, "none\n", 5);
+	}
 	while(i < size) {
 		i++;
 		sprintf(parse, "%d", i);
@@ -69,6 +78,10 @@ void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockadd
 }
 
 void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *userID, char *topic) {
+	if(strlen(userID) == 0) {
+		write(1, "user not registered\n", 20);
+		return;
+	}
 	strcat(buffer, "PTP ");
 	strcat(buffer, userID);
 	strcat(buffer, " ");
@@ -84,8 +97,10 @@ void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 
 	addrlen = sizeof(addr);
 	n = recvfrom(fd, buffer, BUFFERSIZE, 0, (struct sockaddr*) &addr, &addrlen);
-	if(n == -1)
-		exit(1);
+	if (n == -1){
+		write(1, "timeout\n", 8);
+		return;
+	}
 
 	parse = strtok(buffer, " ");
 	parse = strtok(NULL, "\n");
@@ -114,8 +129,10 @@ void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 
 	addrlen = sizeof(addr);
 	n = recvfrom(fd, buffer, BUFFERSIZE, 0, (struct sockaddr*) &addr, &addrlen);
-	if(n == -1)
-		exit(1);
+	if (n == -1){
+		write(1, "timeout\n", 8);
+		return;
+	}
 
 	write(1, "available questions about ", 26);
 	write(1, topic, strlen(topic));
@@ -126,6 +143,11 @@ void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 	parse = strtok(buffer, " ");
 	parse = strtok(NULL, " ");
 	int size = atoi(parse);
+
+	if(size == 0) {
+		write(1, "none\n", 5);
+	}
+
 	while(i < size) {
 		i++;
 		sprintf(parse, "%d", i);

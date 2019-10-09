@@ -7,6 +7,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include "udp.h"
 #include "tcp.h"
 //#define PORT "58000"
@@ -80,6 +81,9 @@ int main(int argc, char *argv[]){
 	if(fd == -1)
 		exit(1);
 
+	struct timeval timeout={3,0};
+	setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(struct timeval));
+
 	nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
 	//nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
 	if(nTCP != 0)
@@ -92,6 +96,7 @@ int main(int argc, char *argv[]){
 	char c;
 	int x;
 
+	memset(userID, '\0', sizeof(char)*5);
 	scanf("%s", command);
 
 	while (strcmp(command, "exit") != 0){
