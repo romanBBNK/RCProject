@@ -167,6 +167,11 @@ void getQuestionList(char *buffer, char *topicName){
 
     char count[2];
     strcat(buffer, "LQR ");
+
+    if(parentTopic == NULL) {
+        strcat(buffer, "0");
+        return;
+    }
     sprintf(count, "%d", parentTopic->question_counter);
     strcat(buffer, count);
 
