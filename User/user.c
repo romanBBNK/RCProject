@@ -62,7 +62,6 @@ int main(int argc, char *argv[]){
 	struct addrinfo hintsTCP, *resTCP;
 	struct sockaddr_in addrTCP;
 	char *question = (char *)malloc(10*sizeof(char));
-	char *question_number = (char *)malloc(2*sizeof(char));
 	char *textFile = (char *)malloc(128*sizeof(char));
 	char *imageFile = (char *)malloc(128*sizeof(char));
 	memset(&hintsTCP, 0, sizeof hintsTCP);
@@ -89,7 +88,7 @@ int main(int argc, char *argv[]){
 	if(nTCP != 0)
 		exit(1);
 	
-	char *parse;
+	char *parse = (char *)malloc(BUFFERSIZE*sizeof(char));
 
 	char command[100];
 
@@ -102,6 +101,7 @@ int main(int argc, char *argv[]){
 	while (strcmp(command, "exit") != 0){
 
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+		memset(parse, '\0', sizeof(char)*BUFFERSIZE);
 
 		if ( (strcmp(command, "register") == 0) || (strcmp(command, "reg") == 0) ){
 			scanf("%s", userID);
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]){
 			memset(topic, '\0', sizeof(char)*10);
 			scanf("%s", topic);
 			question_list(fd, addrlen, n, res, addr, buffer, parse, topic);
-		} else if (strcmp(command, "question_get") == 0){
+		} else if ( (strcmp(command, "question_get") == 0) || (strcmp(command, "qg") == 0)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
 			if(fdTCP == -1)
 
@@ -137,16 +137,7 @@ int main(int argc, char *argv[]){
 			if(nTCP==-1)
 				exit(1);
 			scanf("%s", question);
-			question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, topic, question);
-		} else if (strcmp(command, "qg") == 0){
-			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
-			if(fdTCP == -1)
-
-			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
-			if(nTCP==-1)
-				exit(1);
-			scanf("%s", question_number);
-			qg(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, topic, question_number);
+			question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, topic, question);
 		} else if ( (strcmp(command, "question_submit") == 0) || (strcmp(command, "qs") == 0)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
 			if(fdTCP == -1)
@@ -157,9 +148,9 @@ int main(int argc, char *argv[]){
 			x=0;
 			getchar();
 			while ((c=getchar()) != '\n'){
-				buffer[x++]=c;
+				parse[x++]=c;
 			}
-			question = strtok(buffer, " ");
+			question = strtok(parse, " ");
 			textFile = strtok(NULL, " ");
 			imageFile = strtok(NULL, "\n");
 			question_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, imageFile);
@@ -173,10 +164,9 @@ int main(int argc, char *argv[]){
 			x=0;
 			getchar();
 			while ((c=getchar()) != '\n'){
-				buffer[x++]=c;
+				parse[x++]=c;
 			}
-			question = strtok(buffer, " ");
-			textFile = strtok(NULL, " ");
+			textFile = strtok(parse, " ");
 			imageFile = strtok(NULL, "\n");
 			answer_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, imageFile);
 		}
