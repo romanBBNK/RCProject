@@ -88,7 +88,8 @@ int main(int argc, char *argv[]){
 	if(nTCP != 0)
 		exit(1);
 	
-	char *parse = (char *)malloc(BUFFERSIZE*sizeof(char));
+	char *parse;
+	char *parseTCP = (char *)malloc(BUFFERSIZE*sizeof(char));
 
 	char command[100];
 
@@ -101,7 +102,7 @@ int main(int argc, char *argv[]){
 	while (strcmp(command, "exit") != 0){
 
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
-		memset(parse, '\0', sizeof(char)*BUFFERSIZE);
+		memset(parseTCP, '\0', sizeof(char)*BUFFERSIZE);
 
 		if ( (strcmp(command, "register") == 0) || (strcmp(command, "reg") == 0) ){
 			scanf("%s", userID);
@@ -148,9 +149,9 @@ int main(int argc, char *argv[]){
 			x=0;
 			getchar();
 			while ((c=getchar()) != '\n'){
-				parse[x++]=c;
+				parseTCP[x++]=c;
 			}
-			question = strtok(parse, " ");
+			question = strtok(parseTCP, " ");
 			textFile = strtok(NULL, " ");
 			imageFile = strtok(NULL, "\n");
 			question_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, imageFile);
@@ -164,9 +165,9 @@ int main(int argc, char *argv[]){
 			x=0;
 			getchar();
 			while ((c=getchar()) != '\n'){
-				parse[x++]=c;
+				parseTCP[x++]=c;
 			}
-			textFile = strtok(parse, " ");
+			textFile = strtok(parseTCP, " ");
 			imageFile = strtok(NULL, "\n");
 			answer_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, imageFile);
 		}
