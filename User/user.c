@@ -71,8 +71,8 @@ int main(int argc, char *argv[]){
 
 	parseArgs(argc, (char** const)argv);
 
-	n = getaddrinfo(ip, port, &hints, &res);
-	//n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
+	//n = getaddrinfo(ip, port, &hints, &res);
+	n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
 	if(n != 0)
 		exit(1);
 
@@ -83,8 +83,8 @@ int main(int argc, char *argv[]){
 	struct timeval timeout={3,0};
 	setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(struct timeval));
 
-	nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
-	//nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
+	//nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
+	nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
 	if(nTCP != 0)
 		exit(1);
 	
@@ -133,6 +133,7 @@ int main(int argc, char *argv[]){
 		} else if ( (strcmp(command, "question_get") == 0) || (strcmp(command, "qg") == 0)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
 			if(fdTCP == -1)
+				exit(1);
 
 			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
 			if(nTCP==-1)
@@ -142,6 +143,7 @@ int main(int argc, char *argv[]){
 		} else if ( (strcmp(command, "question_submit") == 0) || (strcmp(command, "qs") == 0)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
 			if(fdTCP == -1)
+				exit(1);
 
 			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
 			if(nTCP==-1)
@@ -158,6 +160,7 @@ int main(int argc, char *argv[]){
 		} else if ( (strcmp(command, "answer_submit") == 0) || (strcmp(command, "as") == 0)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
 			if(fdTCP == -1)
+				exit(1);
 
 			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
 			if(nTCP==-1)
@@ -170,7 +173,28 @@ int main(int argc, char *argv[]){
 			textFile = strtok(parseTCP, " ");
 			imageFile = strtok(NULL, "\n");
 			answer_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, imageFile);
-		}
+		} /*else if ( (strcmp(command, "ola") == 0) || (strcmp(command, "ola2") == 0)){
+			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+			if(fdTCP == -1)
+				exit(1);
+
+			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+			if(nTCP==-1)
+				exit(1);
+
+			strcpy(buffer, "UM DOIS TRES QUATRO CINCO SEIS SETE OITO 4952379754692386542954867239548627459846592865479284657928364398649857y298t5294y5g23yu54g3495t3548gi23u5yiu45yg2i3u54yg239548g746u245i23yu54i2u34y52u3h54g2i3u54hg23ui54hg\n");
+			
+			printf("enviar -> %s\n", buffer);
+
+			int toSend = strlen(buffer);
+			while(toSend > 0){
+				nTCP = write(fdTCP, buffer, toSend);
+				if(n == -1)
+					exit(1);
+				toSend -= nTCP;
+				buffer += nTCP;
+			}
+		}*/
 		scanf("%s", command);
 	}
 

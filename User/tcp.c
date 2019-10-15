@@ -136,15 +136,12 @@ void writeToFile(int fd, int n, char *filePath, int size){
 		fseek(f, alreadyReceived, SEEK_SET);
 		if (size < BUFFERSIZE){
 			n = read(fd, fileContent, size);
-			if(n == -1)
-				exit(1);
-			fwrite(fileContent, 1, size, f);
 		} else {
 			n = read(fd, fileContent, BUFFERSIZE);
-			if(n == -1)
-				exit(1);
-			fwrite(fileContent, 1, BUFFERSIZE, f);
 		}
+		if(n == -1)
+			exit(1);
+		fwrite(fileContent, 1, n, f);
 		alreadyReceived += n;
 		memset(fileContent, '\0', sizeof(char)*BUFFERSIZE);
 	} while(alreadyReceived != size);
@@ -158,14 +155,13 @@ void connectTCP(int fd, int addrlen, int n, struct addrinfo *res, struct sockadd
 		exit(1);
 }
 
-void question_get(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *topic, char *question) {
+void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *topic, char *question) {
 	char *questionFilePath = (char *)malloc(100*sizeof(char));
 	char *questionImageFilePath = (char *)malloc(100*sizeof(char));
 	char *answerFilePath = (char *)malloc(100*sizeof(char));
 	char *answerImageFilePath = (char *)malloc(100*sizeof(char));
 	char *extension = (char *)malloc(5*sizeof(char));
-
-	connectTCP(fd, addrlen, n, res, addr);
+	char *answerID = (char *)malloc(2*sizeof(char));
 
 	//write the user request to server
 	strcat(buffer, "GQU ");
@@ -173,9 +169,22 @@ void question_get(int fd, int addrlen, int n, struct addrinfo *res, struct socka
 	strcat(buffer, " ");
 	strcat(buffer, question);
 	strcat(buffer, "\n");
+
+	printf("%s\n", buffer);
+
+	int toSend = strlen(buffer);
+	while(toSend > 0){
+		n = write(newfd, buffer, toSend);
+		if(n == -1)
+			exit(1);
+		toSend -= n;
+		buffer += n;
+	}
+	close(newfd);
+	exit(0);
 	
-	int toSend = 6 + strlen(topic) + strlen(question);
-	writeFromBuffer(fd, n, buffer, toSend);
+	//int toSend = 6 + strlen(topic) + strlen(question);
+	writeFromBuffer(newfd, n, buffer, toSend);
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
 	strcat(questionFilePath, "/");
@@ -184,22 +193,64 @@ void question_get(int fd, int addrlen, int n, struct addrinfo *res, struct socka
 	strcat(questionFilePath, question);
 	strcat(questionFilePath, ".txt");
 
-	n = read(fd, buffer, BUFFERSIZE);
+	n = read(newfd, buffer, BUFFERSIZE);
 	if(n == -1)
 		exit(1);
 	printf("%s\n", buffer);
-/*
+
 	//read info from the server token by token
-	writeTokenToBuffer(fd, n, buffer);
-	writeTokenToBuffer(fd, n, buffer);
-	int size = atol(writeTokenToBuffer(fd, n, buffer));
+	char caracter[1];
+	char qUserID[5];
+	while(1) {
+		n = read(newfd, caracter, 1);
+		if(n == -1)
+			exit(1);
+		if((strcmp(caracter, "\n") == 0))
+			break;
+		strcat(qUserID, caracter);
+	}
+	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+
+	while(1) {
+		n = read(newfd, caracter, 1);
+		if(n == -1)
+			exit(1);
+		if((strcmp(caracter, "\n") == 0))
+			break;
+		strcat(buffer, caracter);
+	}
+	int qsize = atol(buffer);
+
+	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
 	//write to the question file
-	writeToFile(fd, n, questionFilePath, size);
+	writeToFile(newfd, n, questionFilePath, qsize);
+
+	while(1) {
+		n = read(newfd, caracter, 1);
+		if(n == -1)
+			exit(1);
+		if((strcmp(caracter, "\n") == 0))
+			break;
+		strcat(buffer, caracter);
+	}
 	
-	int qIMG = atol(writeTokenToBuffer(fd, n, buffer));
+	int qIMG = atol(buffer);
+
+	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+
 	if (qIMG){
-		extension = writeTokenToBuffer(fd, n, buffer);
+
+		while(1) {
+			n = read(newfd, caracter, 1);
+			if(n == -1)
+				exit(1);
+			if((strcmp(caracter, "\n") == 0))
+				break;
+			strcat(buffer, caracter);
+		}
+		strcpy(extension, buffer);
+		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
 		strcat(questionImageFilePath, "/");
 		strcat(questionImageFilePath, topic);
@@ -207,30 +258,111 @@ void question_get(int fd, int addrlen, int n, struct addrinfo *res, struct socka
 		strcat(questionImageFilePath, question);
 		strcat(questionImageFilePath, extension);
 
-		size = atol(writeTokenToBuffer(fd, n, buffer));
+		while(1) {
+			n = read(newfd, caracter, 1);
+			if(n == -1)
+				exit(1);
+			if((strcmp(caracter, "\n") == 0))
+				break;
+			strcat(buffer, caracter);
+		}
 
-		writeToFile(fd, n, questionImageFilePath, size);
+		int qisize = atol(buffer);
+		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+
+		writeToFile(newfd, n, questionImageFilePath, qisize);
 	}
-	int n_ans = atol(writeTokenToBuffer(fd, n, buffer));
+
+	while(1) {
+		n = read(newfd, caracter, 1);
+		if(n == -1)
+			exit(1);
+		if((strcmp(caracter, "\n") == 0))
+			break;
+		strcat(buffer, caracter);
+	}
+
+	int n_ans = atol(buffer);
+	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+	
+	char* aUserID = (char *)malloc(5*sizeof(char));
 	for (int i=0; i<n_ans; i++){
-		char *answerID = writeTokenToBuffer(fd, n, buffer);
-		writeTokenToBuffer(fd, n, buffer);
+		while(1) {
+			n = read(newfd, caracter, 1);
+			if(n == -1)
+				exit(1);
+			if((strcmp(caracter, "\n") == 0))
+				break;
+			strcat(aUserID, caracter);
+		}
 
 		strcat(answerFilePath, "/");
 		strcat(answerFilePath, topic);
 		strcat(answerFilePath, "/");
 		strcat(answerFilePath, question);
 		strcat(answerFilePath, "_");
-		strcat(answerFilePath, answerID);
+		strcat(answerFilePath, aUserID);
 		strcat(answerFilePath, ".txt");
+		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+		memset(aUserID, '\0', sizeof(char)*5);
 
-		size = atol(writeTokenToBuffer(fd, n, buffer));
-		
-		writeToFile(fd, n, answerFilePath, size);
+		while(1) {
+			n = read(newfd, caracter, 1);
+			if(n == -1)
+				exit(1);
+			if((strcmp(caracter, "\n") == 0))
+				break;
+			strcat(buffer, caracter);
+		}
+		int asize = atol(buffer);
+		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
-		int aIMG = atol(writeTokenToBuffer(fd, n, buffer));
+		writeToFile(newfd, n, answerFilePath, asize);
+
+		while(1) {
+			n = read(newfd, caracter, 1);
+			if(n == -1)
+				exit(1);
+			if((strcmp(caracter, "\n") == 0))
+				break;
+			strcat(buffer, caracter);
+		}
+
+		int aIMG = atol(buffer);
+		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 		if (aIMG){
-			extension = writeTokenToBuffer(fd, n, buffer);
+			while(1) {
+				n = read(newfd, caracter, 1);
+				if(n == -1)
+					exit(1);
+				if((strcmp(caracter, "\n") == 0))
+					break;
+				strcat(buffer, caracter);
+			}
+			strcpy(extension, buffer);
+			memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+
+			while(1) {
+				n = read(newfd, caracter, 1);
+				if(n == -1)
+					exit(1);
+				if((strcmp(caracter, "\n") == 0))
+					break;
+				strcat(buffer, caracter);
+			}
+			strcpy(extension, buffer);
+			memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+
+			while(1) {
+				n = read(newfd, caracter, 1);
+				if(n == -1)
+					exit(1);
+				if((strcmp(caracter, "\n") == 0))
+					break;
+				strcat(buffer, caracter);
+			}
+			strcpy(answerID, buffer);
+			memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
 			strcat(answerImageFilePath, "/");
 			strcat(answerImageFilePath, topic);
@@ -239,14 +371,28 @@ void question_get(int fd, int addrlen, int n, struct addrinfo *res, struct socka
 			strcat(answerImageFilePath, "_");
 			strcat(answerImageFilePath, answerID);
 			strcat(answerImageFilePath, extension);
+			memset(extension, '\0', sizeof(char)*10);
+			memset(answerID, '\0', sizeof(char)*2);
 
-			size = atol(writeTokenToBuffer(fd, n, buffer));
+			while(1) {
+				n = read(newfd, caracter, 1);
+				if(n == -1)
+					exit(1);
+				if((strcmp(caracter, "\n") == 0))
+					break;
+				strcat(buffer, caracter);
+			}
 
-			writeToFile(fd, n, answerImageFilePath, size);
+			int aisize = atol(buffer);
+			memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+
+			writeToFile(newfd, n, answerImageFilePath, aisize);
 		}
 		memset(answerFilePath, '\0', sizeof(char)*100);
 		memset(answerImageFilePath, '\0', sizeof(char)*100);
-	}*/
+	}
+
+/*
 	memset(questionFilePath, '\0', sizeof(char)*100);
 	memset(questionImageFilePath, '\0', sizeof(char)*100);
 	write(1, "stored files:\n", 14);
@@ -254,7 +400,7 @@ void question_get(int fd, int addrlen, int n, struct addrinfo *res, struct socka
 
 	write(1, "Q: ", 3);
 	
-/*	int qCaracters = atol(parse);
+	int qCaracters = atol(parse);
 	char subString[qCaracters];
 	memcpy(subString, &parse[11+strlen(parse)], qCaracters);
 	write(1, subString, qCaracters);
