@@ -114,6 +114,8 @@ int main(int argc, char *argv[]){
 	fd_set rset;
 	FD_ZERO(&rset);
 
+	pid_t pid;
+
 	while(1) {
 
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
@@ -126,33 +128,78 @@ int main(int argc, char *argv[]){
 			n=recvfrom(fd,buffer,BUFFERSIZE,0,(struct sockaddr*) &addr, &addrlen);
 			if(n==-1)
 				exit(1);
+			parse = strtok(buffer, " \n");
+
+			if ((strcmp(parse, "REG") == 0)){
+				validReg(fd, addrlen, n, addr, buffer, parse);
+			} else if ((strcmp(parse, "LTP") == 0)){
+				topic_list(fd, addrlen, n, addr, buffer, count, topic_counter);
+			} else if ((strcmp(parse, "PTP") == 0)){
+				topic_propose(fd, addrlen, n, addr, buffer, parse);
+			} else if ((strcmp(parse, "LQU") == 0)){
+				question_list(fd, addrlen, n, addr, buffer, parse);
+			}
 		} else if (FD_ISSET(fdTCP, &rset)){
-			if((newfd=accept(fdTCP,(struct sockaddr*) &addrTCP, &addrlenTCP)) == -1)
+			if((newfd=accept(fdTCP,(struct sockaddr*)&addrTCP, &addrlenTCP)) == -1)
 				exit(1);
 
-			nTCP=read(newfd,buffer,sizeof(buffer));
-			if(n==-1)
-				exit(1);
+			if ((pid = fork()) < 0) {
+                perror("Failed to create new process.");
+                exit(1);
+            } else if (pid == 0) {
+            	printf("%s\n", "child created");
+				
+				char* ptr = buffer;
+				int toRead = 3; //para ler comando
+				while(toRead > 0) {
+					n = read(newfd, ptr, toRead);
+					if(n == -1)
+						exit(1);
+					toRead -= n;
+					ptr += n;
+				}
+
+				if ((strcmp(buffer, "GQU") == 0)){
+					while(1) {
+						n = read(newfd, ptr, 1);
+						if(n == -1)
+							exit(1);
+						if((strcmp(ptr, "\n") == 0))
+							break;
+						ptr += n;
+					}
+
+					question_get(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
+				} else if ((strcmp(buffer, "QUS") == 0)){
+					question_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
+				} else if ((strcmp(buffer, "ANS") == 0)){
+					int nSpace = 5; //numero de espaços
+					while(nSpace > 0) {
+						n = read(newfd, ptr, 1);
+						if(n == -1)
+							exit(1);
+						if(strcmp(ptr, " ") == 0)
+							nSpace --;
+						ptr += n;
+					}
+					answer_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
+				}
+
+				ptr = buffer;
+				int toSend = strlen(buffer);
+				while(toSend > 0){
+					n = write(fdTCP, buffer, toSend);
+					if(n == -1)
+						exit(1);
+					toSend -= n;
+					ptr += n;
+				}
+				exit(0);
+            }
+
 
 			close(newfd);
-		}
-
-		parse = strtok(buffer, " \n");
-
-		if ((strcmp(parse, "REG") == 0)){
-			validReg(fd, addrlen, n, addr, buffer, parse);
-		} else if ((strcmp(parse, "LTP") == 0)){
-			topic_list(fd, addrlen, n, addr, buffer, count, topic_counter);
-		} else if ((strcmp(parse, "PTP") == 0)){
-			topic_propose(fd, addrlen, n, addr, buffer, parse);
-		} else if ((strcmp(parse, "LQU") == 0)){
-			question_list(fd, addrlen, n, addr, buffer, parse);
-		} else if ((strcmp(parse, "GQU") == 0)){
-			question_get(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
-		} else if ((strcmp(parse, "QUS") == 0)){
-			question_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
-		} else if ((strcmp(parse, "ANS") == 0)){
-			answer_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
+			exit(0);
 		}
 	}
 

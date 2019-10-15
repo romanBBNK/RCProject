@@ -27,13 +27,12 @@ int sizeOfFile(char* name){
 
 //from buffer to socket
 void writeFromBuffer(int fd, int n, char* buffer, int toSend){
-	int alreadySent = 0;
-	while(toSend != alreadySent){
-		n = write(fd, buffer, toSend - alreadySent);
+	while(toSend > 0){
+		n = write(fd, buffer, toSend);
 		if(n == -1)
 			exit(1);
-		else
-			alreadySent += n;
+		toSend -= n;
+		buffer += n;
 	}
 }
 
