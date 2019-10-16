@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "tcp.h"
-#define BUFFERSIZE 1000
+#define BUFFERSIZE 10000
 
 int sizeOfFile(char* name){
 	FILE *f = fopen(name, "r");
@@ -126,7 +126,7 @@ char *writeTokenToBuffer(int fd, int n, char *buffer){
 
 //from socket to file
 void writeToFile(int fd, int n, char *filePath, int size){
-	char *fileContent = (char *)malloc(BUFFERSIZE*sizeof(char));
+	/*char *fileContent = (char *)malloc(BUFFERSIZE*sizeof(char));
 	FILE *f = fopen(filePath, "w");
 	if (f == NULL)
 		exit(1);
@@ -146,7 +146,7 @@ void writeToFile(int fd, int n, char *filePath, int size){
 		memset(fileContent, '\0', sizeof(char)*BUFFERSIZE);
 	} while(alreadyReceived != size);
 
-	fclose(f);
+	fclose(f);*/
 }
 
 void connectTCP(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr){
@@ -172,19 +172,16 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 
 	printf("%s\n", buffer);
 
+	char* ptr = buffer;
 	int toSend = strlen(buffer);
 	while(toSend > 0){
-		n = write(newfd, buffer, toSend);
+		n = write(newfd, ptr, toSend);
 		if(n == -1)
 			exit(1);
 		toSend -= n;
-		buffer += n;
+		ptr += n;
 	}
-	close(newfd);
-	exit(0);
-	
-	//int toSend = 6 + strlen(topic) + strlen(question);
-	writeFromBuffer(newfd, n, buffer, toSend);
+
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
 	strcat(questionFilePath, "/");
@@ -193,32 +190,40 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 	strcat(questionFilePath, question);
 	strcat(questionFilePath, ".txt");
 
-	n = read(newfd, buffer, BUFFERSIZE);
-	if(n == -1)
-		exit(1);
-	printf("%s\n", buffer);
-
+	int i;
 	//read info from the server token by token
 	char caracter[1];
-	char qUserID[5];
+	char *qUserID = (char *)malloc(5*sizeof(char));
+	i = 0;
 	while(1) {
 		n = read(newfd, caracter, 1);
 		if(n == -1)
 			exit(1);
-		if((strcmp(caracter, "\n") == 0))
+		if((strcmp(caracter, " ") == 0))
+			break;
+	}
+
+	//qUserID
+	while(1) {
+		n = read(newfd, caracter, 1);
+		if(n == -1)
+			exit(1);
+		if((strcmp(caracter, " ") == 0))
 			break;
 		strcat(qUserID, caracter);
 	}
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
+	//qsize
 	while(1) {
 		n = read(newfd, caracter, 1);
 		if(n == -1)
 			exit(1);
-		if((strcmp(caracter, "\n") == 0))
+		if((strcmp(caracter, " ") == 0))
 			break;
 		strcat(buffer, caracter);
 	}
+
 	int qsize = atol(buffer);
 
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
@@ -230,7 +235,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 		n = read(newfd, caracter, 1);
 		if(n == -1)
 			exit(1);
-		if((strcmp(caracter, "\n") == 0))
+		if((strcmp(caracter, " ") == 0))
 			break;
 		strcat(buffer, caracter);
 	}
@@ -245,7 +250,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 			n = read(newfd, caracter, 1);
 			if(n == -1)
 				exit(1);
-			if((strcmp(caracter, "\n") == 0))
+			if((strcmp(caracter, " ") == 0))
 				break;
 			strcat(buffer, caracter);
 		}
@@ -262,7 +267,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 			n = read(newfd, caracter, 1);
 			if(n == -1)
 				exit(1);
-			if((strcmp(caracter, "\n") == 0))
+			if((strcmp(caracter, " ") == 0))
 				break;
 			strcat(buffer, caracter);
 		}
@@ -277,7 +282,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 		n = read(newfd, caracter, 1);
 		if(n == -1)
 			exit(1);
-		if((strcmp(caracter, "\n") == 0))
+		if((strcmp(caracter, " ") == 0))
 			break;
 		strcat(buffer, caracter);
 	}
@@ -291,7 +296,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 			n = read(newfd, caracter, 1);
 			if(n == -1)
 				exit(1);
-			if((strcmp(caracter, "\n") == 0))
+			if((strcmp(caracter, " ") == 0))
 				break;
 			strcat(aUserID, caracter);
 		}
@@ -310,7 +315,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 			n = read(newfd, caracter, 1);
 			if(n == -1)
 				exit(1);
-			if((strcmp(caracter, "\n") == 0))
+			if((strcmp(caracter, " ") == 0))
 				break;
 			strcat(buffer, caracter);
 		}
@@ -323,7 +328,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 			n = read(newfd, caracter, 1);
 			if(n == -1)
 				exit(1);
-			if((strcmp(caracter, "\n") == 0))
+			if((strcmp(caracter, " ") == 0))
 				break;
 			strcat(buffer, caracter);
 		}
@@ -335,7 +340,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 				n = read(newfd, caracter, 1);
 				if(n == -1)
 					exit(1);
-				if((strcmp(caracter, "\n") == 0))
+				if((strcmp(caracter, " ") == 0))
 					break;
 				strcat(buffer, caracter);
 			}
@@ -346,7 +351,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 				n = read(newfd, caracter, 1);
 				if(n == -1)
 					exit(1);
-				if((strcmp(caracter, "\n") == 0))
+				if((strcmp(caracter, " ") == 0))
 					break;
 				strcat(buffer, caracter);
 			}
@@ -357,7 +362,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 				n = read(newfd, caracter, 1);
 				if(n == -1)
 					exit(1);
-				if((strcmp(caracter, "\n") == 0))
+				if((strcmp(caracter, " ") == 0))
 					break;
 				strcat(buffer, caracter);
 			}
@@ -378,7 +383,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 				n = read(newfd, caracter, 1);
 				if(n == -1)
 					exit(1);
-				if((strcmp(caracter, "\n") == 0))
+				if((strcmp(caracter, " ") == 0))
 					break;
 				strcat(buffer, caracter);
 			}

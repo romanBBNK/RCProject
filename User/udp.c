@@ -8,7 +8,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include "udp.h"
-#define BUFFERSIZE 1000
+#define BUFFERSIZE 10000
 
 void reg(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *userID) {
 	n = sendto(fd, buffer, strlen(buffer), 0, res->ai_addr, res->ai_addrlen);
@@ -53,6 +53,8 @@ void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockadd
 	}
 
 	write(1, "available topics:\n", 18);
+
+	printf("%s\n", buffer);
 
 	int i = 0;
 	parse = strtok(buffer, " ");

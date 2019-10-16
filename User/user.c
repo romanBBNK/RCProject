@@ -11,7 +11,7 @@
 #include "udp.h"
 #include "tcp.h"
 //#define PORT "58000"
-#define BUFFERSIZE 1000
+#define BUFFERSIZE 10000
 
 char* ip;
 char* port;
@@ -127,8 +127,6 @@ int main(int argc, char *argv[]){
 			scanf("%s", topic);
 			topic_propose(fd, addrlen, n, res, addr, buffer, parse, userID, topic);
 		} else if ( (strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)){
-			memset(topic, '\0', sizeof(char)*10);
-			scanf("%s", topic);
 			question_list(fd, addrlen, n, res, addr, buffer, parse, topic);
 		} else if ( (strcmp(command, "question_get") == 0) || (strcmp(command, "qg") == 0)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
