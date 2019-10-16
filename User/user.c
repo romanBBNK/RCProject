@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <stdbool.h>
 #include "udp.h"
 #include "tcp.h"
 //#define PORT "58000"
@@ -49,6 +50,7 @@ int main(int argc, char *argv[]){
 	struct sockaddr_in addr;
 	char *buffer = (char *)malloc(BUFFERSIZE*sizeof(char));
 	char** topicList = (char**)malloc(99*sizeof(char*));
+	bool topicListOn = false;
 	char *topic = (char *)malloc(10*sizeof(char));
 	int topic_number;
 	char *userID = (char *)malloc(5*sizeof(char));
@@ -115,10 +117,11 @@ int main(int argc, char *argv[]){
 			strcat(buffer, "LTP");
 			strcat(buffer, "\n");
 			topic_list(fd, addrlen, n, res, addr, buffer, parse, topicList);
-		} else if (strcmp(command, "topic_select") == 0){
+			topicListOn = true;
+		} else if ((strcmp(command, "topic_select") == 0) && (topicListOn == true)){
 			memset(topic, '\0', sizeof(char)*10);
 			scanf("%s", topic);
-		} else if (strcmp(command, "ts") == 0){
+		} else if ((strcmp(command, "ts") == 0) && (topicListOn == true)){
 			memset(topic, '\0', sizeof(char)*10);
 			scanf("%d", &topic_number);
 			strcat(topic, topicList[topic_number]);
