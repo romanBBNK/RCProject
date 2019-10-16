@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <errno.h>
 #include "data.h"
 //#define PORT "58000"
 #define BUFFERSIZE 128
@@ -18,14 +20,20 @@ struct topic* addNewTopic(char *Name, char *Author){
     struct topic* newTopic = (struct topic*) malloc(sizeof(struct topic));
     struct topic* current;
 
-    //Checks if the topic list is full or if the title is duplicate
-    if(topic_counter==99)
-        return NULL;
+    //Checks if the topic list is full or if the title is duplicate. The returned topic will have it's number be 0,
+    //which flags it as an error, and it's question_counter will specify the error (2 for duplicate, 1 for full)
+    if(topic_counter==99){
+        newTopic->number = 0;
+        newTopic->question_counter = 1;
+        return newTopic;
+    }
     if(topicList != NULL){
         current = topicList;
         while(current!=NULL){
-            if(strcmp(current->name, Name)==0)
-                return NULL;
+            if(strcmp(current->name, Name)==0){
+                newTopic->number = 0;
+                newTopic->question_counter = 2;
+            }
             current = current->next;
         }
     }
@@ -80,6 +88,43 @@ void getTopicList(char *buffer){
         current = current->next;
     }
 }
+int saveNewTopic(char *Name, char *Author){
+
+    FILE *topicsFile;
+    char *folderPath;
+    struct topic* currentTopic;
+
+    //Adds the topic to program memory
+    if( (currentTopic = addNewTopic(Name, Author))->number == 0){
+        //Topic cannot be added. Returns 1 if full or 2 if duplicate
+        return currentTopic->question_counter;
+    }
+
+    //Sets the path for the folder and creates it. It will be "./Data/<topicName>
+    //With read/write/search permissions for owner and group,
+    // and with read/search permissions for others
+    folderPath = (char *)malloc(40 * sizeof(char));
+    strcpy(folderPath, "./Data/");
+    strcat(folderPath, currentTopic->name);
+    if( mkdir(folderPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1){
+        printf("Error creating topic folder.\n");
+        exit(-1);
+    }
+
+    //Opens/creates "./Data/topics.txt", and appends topic info
+    if((topicsFile = fopen("./Data/topics.txt", "a")) == NULL){
+        printf("Error reading topics.txt.\n");
+        exit(-1);
+    }
+    fprintf(topicsFile, "%s\n", Name);
+    fprintf(topicsFile, "%s\n", Author);
+
+    //Closes the file and frees the allocated buffer
+    fclose(topicsFile);
+    free(folderPath);
+
+    return 0;
+}
 
 
 //Question related functions
@@ -89,13 +134,20 @@ struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Au
     struct question* current;
 
     //Checks if the question list is full or if the question is a duplicate
-    if(parentTopic->question_counter == 99)
-        return NULL;
+    //Number=0 means error, replies_number is 2(duplicate) or 1(full)
+    if(parentTopic->question_counter == 99){
+        newQuestion->number = 0;
+        newQuestion->replies_number = 1;
+        return newQuestion;
+    }
     if(parentTopic->questions != NULL){
         current = parentTopic->questions;
         while(current!=NULL){
-            if(strcmp(current->title, Title)==0)
-                return NULL;
+            if(strcmp(current->title, Title)==0){
+                newQuestion->number = 0;
+                newQuestion->replies_number = 2;
+                return newQuestion;
+            }
             current = current->next;
         }
     }
@@ -179,6 +231,48 @@ int getQuestionList(char *buffer, char *topicName){
 
     return questionsRead;
 }
+int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imageFilePath){
+
+    FILE *questionsFile;
+    char *folderPath;
+    struct question* currentQuestion;
+
+    //Adds the question to program memory
+    if( (currentQuestion = addNewQuestion(parentTopic, Title, Author, imageFilePath))->number == 0){
+        //Question cannot be added (full or duplicate)
+        return currentQuestion->replies_number;
+    }
+
+    //Sets the path for the folder and creates it. It will be "./Data/<topicName>/<questionTitle>
+    //With read/write/search permissions for owner and group,
+    // and with read/search permissions for others
+    folderPath = (char *)malloc(40 * sizeof(char));
+    strcpy(folderPath, "./Data/");
+    strcat(folderPath, parentTopic->name);
+    strcat(folderPath, "/");
+    strcat(folderPath, currentQuestion->title);
+    if( mkdir(folderPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1){
+        printf("Error creating question folder.\n");
+        exit(-1);
+    }
+
+    //Opens/creates "./Data/<topicName>/questions.txt", and appends topic info
+    strcpy(folderPath, "./Data/");
+    strcat(folderPath, parentTopic->name);
+    strcat(folderPath, "/questions.txt");
+    if((questionsFile = fopen(folderPath, "a")) == NULL){
+        printf("Error reading questions.txt.\n");
+        exit(-1);
+    }
+    fprintf(questionsFile, "%s\n", Title);
+    fprintf(questionsFile, "%s\n", Author);
+    fprintf(questionsFile, "%s\n", imageFilePath);
+    fclose(questionsFile);
+
+    free(folderPath);
+
+    return 0;
+}
 
 
 //Answer related functions
@@ -188,13 +282,19 @@ struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *A
     struct answer* current;
 
     //Checks if the answer list is full or if the answer is a duplicate
-    if(parentQuestion->replies_number == 99)
-        return NULL;
+    if(parentQuestion->replies_number == 99){
+        newAnswer->name = NULL;
+        newAnswer->number = 1;
+        return newAnswer;
+    }
     if(parentQuestion->answers != NULL){
         current = parentQuestion->answers;
         while(current!=NULL){
-            if(strcmp(current->name, Name)==0)
-                return NULL;
+            if(strcmp(current->name, Name)==0){
+                newAnswer->name = NULL;
+                newAnswer->number = 2;
+                return newAnswer;
+            }
             current = current->next;
         }
     }
@@ -226,11 +326,65 @@ struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *A
     return newAnswer;
 }
 struct answer* getAnswer(){
-    //TODO
+    //TODO getAnswer() function
     return 0;
 }
 int getAnswerList(){
-    //TODO
+    //TODO getAnswerList() function
+    return 0;
+}
+int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Author, char *imageFilePath){
+
+    FILE *answersFile;
+    char *folderPath;
+    char *answerName;
+    char numBuf[3];
+    struct answer* currentAnswer;
+
+    //Creates the name for the answer, <question>_XX
+    answerName = (char *)malloc(20 * sizeof(char));
+    strcpy(answerName, parentQuestion->title);
+    strcat(answerName, "_");
+    sprintf(numBuf, "%d", parentQuestion->replies_number);
+    strcat(answerName, numBuf);
+
+    //Adds the answer to program memory
+    if( (currentAnswer = addNewAnswer(parentQuestion, answerName, Author, imageFilePath))->name == NULL)
+        return currentAnswer->number;
+
+    //Sets the path for the folder and creates it. It will be "./Data/<topicName>/<questionTitle>/<Answer_title>
+    //With read/write/search permissions for owner and group,
+    // and with read/search permissions for others
+    folderPath = (char *)malloc(64 * sizeof(char));
+    strcpy(folderPath, "./Data/");
+    strcat(folderPath, parentTopic);
+    strcat(folderPath, "/");
+    strcat(folderPath, parentQuestion->title);
+    strcat(folderPath, "/");
+    strcat(folderPath, currentAnswer->name);
+    if( mkdir(folderPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1){
+        printf("Error creating answer folder.\n");
+        exit(-1);
+    }
+
+    //Opens/creates "./Data/<topicName>/<questionTitle>/answers.txt", and appends answer info
+    strcpy(folderPath, "./Data/");
+    strcat(folderPath, parentTopic);
+    strcat(folderPath, "/");
+    strcat(folderPath, parentQuestion->title);
+    strcat(folderPath, "/answers.txt");
+    if((answersFile = fopen(folderPath, "a")) == NULL){
+        printf("Error reading answers.txt.\n");
+        exit(-1);
+    }
+    fprintf(answersFile, "%s\n", currentAnswer->name);
+    fprintf(answersFile, "%s\n", Author);
+    fprintf(answersFile, "%s\n", imageFilePath);
+    fclose(answersFile);
+
+    free(answerName);
+    free(folderPath);
+
     return 0;
 }
 
@@ -240,12 +394,6 @@ int retrieveStoredData(){
     /*
      * Retrieves stored data from the txt files.
      */
-
-            //TODO Read questions.txt
-                //TODO Per question, go into folder
-                    //TODO Add question info
-                    //TODO Read answers.txt
-                        //TODO Per answer, add it to the question
 
     //Reads from topics.txt, path is relative for portability: ./Data/topics.txt
     FILE *topicsFile;
@@ -264,6 +412,7 @@ int retrieveStoredData(){
         printf("Error reading topics.txt.\n");
         exit(-1);
     }
+
     //Reads a topic and acts appropriately
     while((readName = getline(&readTopicName, &nameSize, topicsFile)) != -1){
         readAuthor = getline(&readTopicAuthor, &authorSize, topicsFile);
@@ -278,7 +427,6 @@ int retrieveStoredData(){
             exit(-1);
         }
         retrieveStoredQuestions(currentTopic);
-        printf("Topic %s successfully scanned to memory.\n", currentTopic->name);
 
         //Resets the buffers used
         memset(readTopicName, 0, 12);
@@ -340,7 +488,6 @@ int retrieveStoredQuestions(struct topic* currentTopic){
             exit(-1);
         }
         retrieveStoredAnswers(currentTopic, currentQuestion);
-        printf("Question %s successfully scanned to memory.\n", currentQuestion->title);
 
         //Resets the buffers used
         memset(readQstTitle, 0, 12);
@@ -406,7 +553,6 @@ int retrieveStoredAnswers(struct topic* currentTopic, struct question* currentQu
             printf("Error adding answer to memory.\n");
             exit(-1);
         }
-        printf("Answer %s successfully scanned to memory.\n", currentAnswer->name);
 
         //Resets the buffers used
         memset(readAnsName, 0, 12);
@@ -423,14 +569,69 @@ int retrieveStoredAnswers(struct topic* currentTopic, struct question* currentQu
 
     return 0;
 }
-void dataInit(){
-    /*
-     * Initializes the necessary data structures. Add as necessary.
-     */
+int generateFilePath(char* topic, char* question, char* answer, char *imgExt, char *targetPath){
+
+    //Sets base dir and topic
+    strcpy(targetPath, "./Data/");
+    strcat(targetPath, topic);
+
+    //Creates folder if nonexistent
+    errno = 0;
+    if( mkdir(targetPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) !=0 && errno != EEXIST){
+        printf("Error creating topic folder.\n");
+        return -1;
+    }
+
+    //Checks if we want a path to a question
+    if(question==NULL)
+        return 0;
+    else{
+        strcat(targetPath, "/");
+        strcat(targetPath, question);
+        errno = 0;
+        if( mkdir(targetPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) !=0 && errno != EEXIST){
+            printf("Error creating question folder.\n");
+            return -1;
+        }
+    }
+    //Current path: ./Data/topic/question
+
+    //Checks if we want a path to an answer
+    if(answer==NULL){
+        strcat(targetPath, "/");
+        strcat(targetPath, question);
+        strcat(targetPath, ".");
+        //Checks if the path is for an image or text
+        if(imgExt == NULL){
+            //Current path: ./Data/topic/question/question.txt
+            strcat(targetPath, "txt");
+            return 0;
+        } else{
+            //Current path: ./Data/topic/question/question.imgExt
+            strcat(targetPath, imgExt);
+            return 0;
+        }
+    } else{
+        strcat(targetPath, "/");
+        strcat(targetPath, answer);
+        errno = 0;
+        //Current path: ./Data/topic/question/answer
+        if( mkdir(targetPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) !=0 && errno != EEXIST){
+            printf("Error creating answer folder.\n");
+            return -1;
+        }
+        strcat(targetPath, "/");
+        strcat(targetPath, answer);
+        strcat(targetPath, ".");
+        //Checks if the path is for an image or text
+        if(imgExt == NULL){
+            //Current path: ./Data/topic/question/answer/answer.txt
+            strcat(targetPath, "txt");
+            return 0;
+        } else{
+            //Current path: ./Data/topic/question/answer/answer.imgExt
+            strcat(targetPath, imgExt);
+            return 0;
+        }
+    }
 }
-
-
-
-
-
-
