@@ -10,7 +10,7 @@
 #include <math.h>
 #include "tcpServer.h"
 #include "data.h"
-#define BUFFERSIZE 1000
+#define BUFFERSIZE 10000
 
 int sizeOfFile(char* name){
 	FILE *f = fopen(name, "r");

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "data.h"
 //#define PORT "58000"
-#define BUFFERSIZE 128
+#define BUFFERSIZE 10000
 #define MAXMSGSIZE 2048
 
 //Topic related questions
