@@ -169,6 +169,25 @@ int main(int argc, char *argv[]){
 						ptr += n;
 					}
 
+					char *buf = (char *)malloc(BUFFERSIZE*sizeof(char));
+					strcpy(buf, "QGR 11111 2 oi 1 .img 6 imagem 2 12345 3 ola 1 .img 2 7 imagem2 54321 4 ola2 1 .img 2 7 imagem3\n");
+					printf("buffer -> %s\n", buf);
+					int toSend1 = strlen(buf);
+					char* ptr = buf;
+					while(toSend1 > 0) {
+						n = write(newfd, ptr, toSend1);
+						if(n == -1)
+							exit(1);
+						toSend1 -= n;
+						printf("%d\n", toSend1);
+						ptr += n;
+					}
+
+					printf("buffer-> %s\n", buf);
+
+					close(newfd);
+					exit(0);
+
 					question_get(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
 				} else if ((strcmp(buffer, "QUS") == 0)){
 					question_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
