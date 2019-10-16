@@ -54,8 +54,6 @@ void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockadd
 
 	write(1, "available topics:\n", 18);
 
-	printf("%s\n", buffer);
-
 	int i = 0;
 	parse = strtok(buffer, " ");
 	parse = strtok(NULL, " ");
@@ -63,10 +61,12 @@ void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockadd
 	if(size == 0) {
 		write(1, "none\n", 5);
 	}
+
+	char *num = (char *)malloc(2*sizeof(char));
 	while(i < size) {
 		i++;
-		sprintf(parse, "%d", i);
-		write(1, parse, strlen(parse));
+		sprintf(num, "%d", i);
+		write(1, num, strlen(num));
 		write(1, " - ", 3);
 		parse = strtok(NULL, ":");
 		write(1, parse, strlen(parse));
@@ -137,9 +137,9 @@ void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 	}
 
 	write(1, "available questions about ", 26);
+	
 	write(1, topic, strlen(topic));
 	write(1,":\n",2);
-	memset(topic, '\0', sizeof(char)*10);
 
 	int i = 0;
 	parse = strtok(buffer, " ");
@@ -150,10 +150,11 @@ void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 		write(1, "none\n", 5);
 	}
 
+	char *num = (char *)malloc(2*sizeof(char));
 	while(i < size) {
 		i++;
-		sprintf(parse, "%d", i);
-		write(1, parse, strlen(parse));
+		sprintf(num, "%d", i);
+		write(1, num, strlen(num));
 		write(1, " - ", 3);
 		parse = strtok(NULL, ":");
 		write(1, parse, strlen(parse));
