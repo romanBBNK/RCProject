@@ -23,7 +23,7 @@ static void parseArgs(long argc, char* const argv[]){
 	long opt;
 	opterr = 0;
 
-	port = "58000";
+	port = "58018";
 	while ( (opt = getopt(argc, argv, "p:")) != -1){
 		switch (opt){
 			
@@ -33,7 +33,7 @@ static void parseArgs(long argc, char* const argv[]){
 			case '?':
 			default:
 				//opterr++;
-				port = "58000";
+				port = "58018";
 				break;
 		}
 	}
@@ -155,21 +155,9 @@ int main(int argc, char *argv[]){
                 exit(1);
             } else if (pid == 0) {
             	printf("%s\n", "child created");
-
-				char caracter[1];
-				while(1) {
-					n = read(newfd, caracter, 1);
-					printf("%s", caracter);
-					if(n == -1)
-						exit(1);
-				}
-
-				close(newfd);
-				close(fdTCP);
-				exit(0);
 				
 				char* ptr = buffer;
-				int toRead = 3; //para ler comando
+				int toRead = 4; //para ler comando
 				while(toRead > 0) {
 					n = read(newfd, ptr, toRead);
 					if(n == -1)
@@ -178,66 +166,17 @@ int main(int argc, char *argv[]){
 					ptr += n;
 				}
 
-				if ((strcmp(buffer, "GQU") == 0)){
-					while(1) {
-						n = read(newfd, ptr, 1);
-						if(n == -1)
-							exit(1);
-						if((strcmp(ptr, "\n") == 0))
-							break;
-						ptr += n;
-					}
+				printf("buffer->%s\n", buffer);
 
-					char *buf = (char *)malloc(BUFFERSIZE*sizeof(char));
-					strcpy(buf, "QGR 11111 2 oi 1 .img 6 imagem 2 12345 3 ola 1 .img 2 7 imagem2 54321 4 ola2 1 .img 2 7 imagem3\n");
-					printf("buffer -> %s\n", buf);
-					int toSend1 = strlen(buf);
-					char* ptr = buf;
-					while(toSend1 > 0) {
-						n = write(newfd, ptr, toSend1);
-						if(n == -1)
-							exit(1);
-						toSend1 -= n;
-						printf("%d\n", toSend1);
-						ptr += n;
-					}
-
-					printf("buffer-> %s\n", buf);
-
-					close(newfd);
-					exit(0);
-
+				if ((strcmp(buffer, "GQU ") == 0)){
+					memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 					question_get(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
-				} else if ((strcmp(buffer, "QUS") == 0)){
+				} else if ((strcmp(buffer, "QUS ") == 0)) {
+					printf("buffer->%s\n", buffer);
 					question_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
-				} else if ((strcmp(buffer, "ANS") == 0)){
-					int nSpace = 5; //numero de espaços
-					while(nSpace > 0) {
-						n = read(newfd, ptr, 1);
-						if(n == -1)
-							exit(1);
-						if(strcmp(ptr, " ") == 0)
-							nSpace --;
-						ptr += n;
-					}
-					answer_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
 				}
-
-				ptr = buffer;
-				int toSend = strlen(buffer);
-				while(toSend > 0){
-					n = write(fdTCP, buffer, toSend);
-					if(n == -1)
-						exit(1);
-					toSend -= n;
-					ptr += n;
-				}
-				exit(0);
             }
-
-
 			close(newfd);
-			exit(0);
 		}
 	}
 
