@@ -657,7 +657,7 @@ int generateFilePath(char* topic, char* question, char* answer, char *imgExt, ch
         strcat(targetPath, question);
         strcat(targetPath, ".");
         //Checks if the path is for an image or text
-        if(strcmp(imgExt, "NULL") == 0){
+        if(imgExt==NULL){
             //Current path: ./Data/topic/question/question.txt
             strcat(targetPath, "txt");
             return 0;
@@ -679,7 +679,7 @@ int generateFilePath(char* topic, char* question, char* answer, char *imgExt, ch
         strcat(targetPath, answer);
         strcat(targetPath, ".");
         //Checks if the path is for an image or text
-        if(strcmp(imgExt, "NULL") == 0){
+        if(imgExt == NULL){
             //Current path: ./Data/topic/question/answer/answer.txt
             strcat(targetPath, "txt");
             return 0;
