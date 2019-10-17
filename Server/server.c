@@ -67,6 +67,13 @@ int main(int argc, char *argv[]){
 	hintsTCP.ai_flags=AI_PASSIVE|AI_NUMERICSERV;
 
 	retrieveStoredData();
+    //saveNewQuestion(getTopic("ExTopic1"), "Putas", "12245", NULL);
+    //addNewQuestion(getTopic("ExTopic1"), "Putassa", "22450", "NULL");
+    getQuestionList(buffer, "ExTopic1");
+    printf("%s\n", buffer);
+    //saveNewQuestion(getTopic("ExTopic1"), "Putaria", "12254", "png");
+    //getQuestionList(buffer, "ExTopic1");
+    //printf("%s\n", buffer);
 
 	parseArgs(argc, (char** const)argv);
 
