@@ -226,7 +226,18 @@ void question_submit(int fd, int addrlen, int n, char *buffer, char *parse, int 
 	char *iext = (char *)malloc(3*sizeof(char));
 	char *isize = (char *)malloc(100*sizeof(char));
 
-	readTokenFromServer(newfd, n, buffer);
+	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+	char caracter[1];
+	while(1) {
+		n = read(fd, caracter, 1);
+		printf("%s", caracter);
+		if(n == -1)
+			exit(1);
+		if(strcmp(caracter, "\n") == 0)
+			break;
+	}
+
+	/*readTokenFromServer(newfd, n, buffer);
 
 	readTokenFromServer(newfd, n, buffer);
 	strcpy(qUserID, buffer);
@@ -262,7 +273,7 @@ void question_submit(int fd, int addrlen, int n, char *buffer, char *parse, int 
 		saveNewQuestion(getTopic(topic), question, qUserID, targetPath);
 		writeToFile(newfd, n, buffer, targetPath, size);
 		memset(targetPath, '\0', sizeof(char)*100);
-	}
+	}*/
 }
 
 void answer_submit(int fd, int addrlen, int n, char *buffer, char *parse, int newfd){
