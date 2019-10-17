@@ -239,8 +239,45 @@ int getQuestionList(char *buffer, char *topicName){
     }
     return 0;
 }
-int getLQuestionList(char *buffer, char *topicName){
+int getLastQuestionList(char *buffer, char *topicName){
+
+    int startQuest;
+    struct topic* parentTopic;
+    struct question* current;
+
+    parentTopic = getTopic(topicName);
+
+    if( parentTopic->question_counter <=10)
+        return getQuestionList(buffer, topicName);
+
+    startQuest = parentTopic->question_counter -9;
+    memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+    strcat(buffer, "LQR ");
+
+    if(parentTopic == NULL) {
+        strcat(buffer, "0");
+        return -1;
+    }
+
+    strcat(buffer, "10");
+
+    char num[2];
+
+    current = parentTopic->questions;
+    while(current!=NULL){
+        if(current->number >= startQuest) {
+            strcat(buffer, " ");
+            strcat(buffer, current->title);
+            strcat(buffer, ":");
+            strcat(buffer, current->author);
+            strcat(buffer, ":");
+            sprintf(num, "%d", current->number);
+            strcat(buffer, num);
+        }
+        current = current->next;
+    }
     return 0;
+
 }
 int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imgExt){
 
