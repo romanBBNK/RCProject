@@ -164,9 +164,13 @@ struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Au
     newQuestion->number = parentTopic->question_counter + 1;
     newQuestion->replies_number = 0;
 
-    newQuestion->imgExt = (char *)malloc(3*sizeof(char));
-    if(imgExt!=NULL)
+    newQuestion->imgExt = (char *)malloc(5*sizeof(char));
+    if(imgExt!=NULL) {
         strcpy(newQuestion->imgExt, imgExt);
+    } else {
+        strcpy(newQuestion->imgExt, "NULL");
+    }
+
 
     newQuestion->answers = NULL;
     newQuestion->next = NULL;
@@ -316,8 +320,12 @@ struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *A
 
     newAnswer->number = parentQuestion->replies_number + 1;
 
-    newAnswer->imgExt = (char *)malloc(strlen(imgExt)*sizeof(char));
-    strcpy(newAnswer->imgExt, Name);
+    newAnswer->imgExt = (char *)malloc(3*sizeof(char));
+    if(imgExt!=NULL) {
+        strcpy(newAnswer->imgExt, imgExt);
+    } else {
+        strcpy(newAnswer->imgExt, "NULL");
+    }
 
     newAnswer->next = NULL;
 
@@ -400,6 +408,18 @@ int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Auth
     free(folderPath);
 
     return 0;
+}
+int getLastAnswerNumber(struct question* parentQuestion){
+
+    struct answer* current;
+
+    current = parentQuestion->answers;
+    while(current!=NULL){
+        if(current->number == parentQuestion->replies_number)
+            return current->number;
+        current = current->next;
+    }
+    return -1;
 }
 
 

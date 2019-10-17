@@ -54,6 +54,7 @@ int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *
 struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *Author, char *imgExt);
 struct answer* getAnswer(char *parentTopic, char *parentQuestion, int answerNumber);
 int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Author, char *imgExt);
+int getLastAnswerNumber(struct question* parentQuestion);
 
 //data storage/retrieval functions
 int retrieveStoredData();
