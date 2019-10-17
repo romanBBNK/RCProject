@@ -21,7 +21,7 @@ static void parseArgs(long argc, char* const argv[]){
 	char hostname[128];
 	gethostname(hostname, 128);
 	ip = hostname;
-	port = "58000";
+	port = "58018";
 
 	long opt;
 	opterr = 0;
@@ -81,8 +81,8 @@ int main(int argc, char *argv[]){
 
 	parseArgs(argc, (char** const)argv);
 
-	//n = getaddrinfo(ip, port, &hints, &res);
-	n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
+	n = getaddrinfo(ip, port, &hints, &res);
+	//n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
 	if(n != 0)
 		exit(1);
 
@@ -93,8 +93,8 @@ int main(int argc, char *argv[]){
 	struct timeval timeout={3,0};
 	setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(struct timeval));
 
-	//nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
-	nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
+	nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
+	//nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
 	if(nTCP != 0)
 		exit(1);
 	
