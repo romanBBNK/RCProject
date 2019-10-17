@@ -49,7 +49,7 @@ void topic_propose(int fd, int addrlen, int n, struct sockaddr_in addr, char *bu
 	userID = strtok(NULL, " "); // parse = userID
 	parse = strtok(NULL, "\n"); // parse = topic
 
-	addNewTopic(parse, userID);
+	saveNewTopic(parse, userID);
 	
 /*	if ((strcmp(status, "OK") == 0)) {
 */		write(1, "Topic ", 6);

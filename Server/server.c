@@ -70,6 +70,10 @@ int main(int argc, char *argv[]){
 
 	parseArgs(argc, (char** const)argv);
 
+	/*
+	 * TODO: Add function calls to retrieve stored data into the file structures.
+	 */
+
 	n=getaddrinfo(NULL,port,&hints,&res);
 
 	if(n!=0)
@@ -144,6 +148,18 @@ int main(int argc, char *argv[]){
                 exit(1);
             } else if (pid == 0) {
             	printf("%s\n", "child created");
+
+				char caracter[1];
+				while(1) {
+					n = read(newfd, caracter, 1);
+					printf("%s", caracter);
+					if(n == -1)
+						exit(1);
+				}
+
+				close(newfd);
+				close(fdTCP);
+				exit(0);
 				
 				char* ptr = buffer;
 				int toRead = 3; //para ler comando
