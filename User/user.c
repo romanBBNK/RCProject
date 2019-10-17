@@ -51,9 +51,13 @@ int main(int argc, char *argv[]){
 	char *buffer = (char *)malloc(BUFFERSIZE*sizeof(char));
 	char** topicList = (char**)malloc(99*sizeof(char*));
 	bool topicListOn = false;
+	char** questionList = (char**)malloc(99*sizeof(char*));
+	bool questionListOn = false;
 	char *topic = (char *)malloc(10*sizeof(char));
 	int topic_number;
+	int question_number;
 	char *userID = (char *)malloc(5*sizeof(char));
+	bool userIdOn = false;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family=AF_INET;
 	hints.ai_socktype=SOCK_DGRAM;
@@ -112,7 +116,7 @@ int main(int argc, char *argv[]){
 			strcat(buffer, userID);
 			strcat(buffer, "\n");
 			reg(fd, addrlen, n, res, addr, buffer, parse, userID);
-
+			userIdOn = true;
 		} else if ( (strcmp(command, "topic_list") == 0) || (strcmp(command, "tl") == 0)){
 			strcat(buffer, "LTP");
 			strcat(buffer, "\n");
@@ -130,8 +134,10 @@ int main(int argc, char *argv[]){
 			scanf("%s", topic);
 			topic_propose(fd, addrlen, n, res, addr, buffer, parse, userID, topic);
 		} else if ( (strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)){
-			question_list(fd, addrlen, n, res, addr, buffer, parse, topic);
-		} else if ( (strcmp(command, "question_get") == 0) || (strcmp(command, "qg") == 0)){
+			question_list(fd, addrlen, n, res, addr, buffer, parse, topic, questionList);
+			questionListOn = true;
+		} else if ((strcmp(command, "question_get") == 0) && (questionListOn == true)){
+			memset(question, '\0', sizeof(char)*10);
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
 			if(fdTCP == -1)
 				exit(1);
@@ -141,7 +147,19 @@ int main(int argc, char *argv[]){
 				exit(1);
 			scanf("%s", question);
 			question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, topic, question);
-		} else if ( (strcmp(command, "question_submit") == 0) || (strcmp(command, "qs") == 0)){
+		} else if ((strcmp(command, "qg") == 0) && (questionListOn == true)) {
+			memset(question, '\0', sizeof(char)*10);
+			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+			if(fdTCP == -1)
+				exit(1);
+
+			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+			if(nTCP==-1)
+				exit(1);
+			scanf("%d", &question_number);
+			strcat(question, questionList[question_number]);
+			question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, topic, question);
+		} else if ( ((strcmp(command, "question_submit") == 0) || (strcmp(command, "qs") == 0)) && (userIdOn == true)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
 			if(fdTCP == -1)
 				exit(1);

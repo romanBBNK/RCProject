@@ -118,7 +118,7 @@ void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 	}
 }
 
-void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *topic) {
+void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *topic, char** questionList) {
 	strcat(buffer, "LQU ");
 	strcat(buffer, topic);
 	strcat(buffer, "\n");
@@ -158,6 +158,8 @@ void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 		write(1, " - ", 3);
 		parse = strtok(NULL, ":");
 		write(1, parse, strlen(parse));
+		questionList[i] = (char*)malloc(sizeof(char)*(strlen(parse) + 1));
+		strcpy(questionList[i], parse);
 		parse = strtok(NULL, ":");
 		parse = strtok(NULL, " \n");
 		write(1, "\n", 1);
