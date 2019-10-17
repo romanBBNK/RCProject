@@ -340,10 +340,6 @@ struct answer* getAnswer(){
     //TODO getAnswer() function
     return 0;
 }
-int getAnswerList(){
-    //TODO getAnswerList() function
-    return 0;
-}
 int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Author, char *imageFilePath){
 
     FILE *answersFile;
@@ -418,10 +414,16 @@ int retrieveStoredData(){
 
     readTopicName = (char *)malloc(12 * sizeof(char));
     readTopicAuthor = (char *)malloc(7 * sizeof(char));
-
-    if((topicsFile = fopen("./Data/topics.txt", "r")) == NULL){
-        printf("Error reading topics.txt.\n");
-        exit(-1);
+    if( access("./Data/topics.txt", F_OK) != -1){
+        //File exists
+        if((topicsFile = fopen("./Data/topics.txt", "r")) == NULL){
+            printf("Error reading topics.txt.\n");
+            exit(-1);
+        }
+    } else{
+        //Topics.txt doesn't exist (this means it's the first time the server is run and there is no previous
+        //Data to load. Returns
+        return 0;
     }
 
     //Reads a topic and acts appropriately

@@ -67,6 +67,7 @@ int main(int argc, char *argv[]){
 	hintsTCP.ai_flags=AI_PASSIVE|AI_NUMERICSERV;
 
 	retrieveStoredData();
+    saveNewTopic("nhqs", "12345");
 
 	parseArgs(argc, (char** const)argv);
 
