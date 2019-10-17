@@ -281,7 +281,7 @@ int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *
     }
     fprintf(questionsFile, "%s\n", Title);
     fprintf(questionsFile, "%s\n", Author);
-    fprintf(questionsFile, "%s\n", imgExt);
+    fprintf(questionsFile, "%s\n", currentQuestion->imgExt);
     fclose(questionsFile);
 
     free(folderPath);
@@ -369,9 +369,15 @@ int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Auth
     sprintf(numBuf, "%d", parentQuestion->replies_number);
     strcat(answerName, numBuf);
 
-    //Adds the answer to program memory
-    if( (currentAnswer = addNewAnswer(parentQuestion, answerName, Author, imgExt))->name == NULL)
-        return currentAnswer->number;
+    if(imgExt==NULL) {
+        //Adds the answer to program memory
+        if ((currentAnswer = addNewAnswer(parentQuestion, answerName, Author, "NULL"))->name == NULL)
+            return currentAnswer->number;
+    } else {
+        //Adds the answer to program memory
+        if ((currentAnswer = addNewAnswer(parentQuestion, answerName, Author, imgExt))->name == NULL)
+            return currentAnswer->number;
+    }
 
     //Sets the path for the folder and creates it. It will be "./Data/<topicName>/<questionTitle>/<Answer_title>
     //With read/write/search permissions for owner and group,
