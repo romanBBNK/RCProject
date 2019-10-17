@@ -37,12 +37,12 @@ int sizeOfFile2(char* name){
 	return size;
 }
 
-//from socket to buffer token by token
 void readTokenFromServer(int fd, int n, char *buffer){
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 	char caracter[1];
 	while(1) {
 		n = read(fd, caracter, 1);
+		printf("-%s-\n", caracter);
 		if(n == -1)
 			exit(1);
 		if((strcmp(caracter, " ") == 0) || (strcmp(caracter, "\n") == 0))
@@ -58,6 +58,7 @@ void writeTokenToServer(int fd, int n, char *buffer) {
 		n = write(fd, ptr, toSend);
 		if(n == -1)
 			exit(1);
+		printf("%s", ptr);
 		toSend -= n;
 		ptr += n;
 	}
@@ -71,10 +72,63 @@ void writeTokenToServer2(int fd, int n, char *buffer, int size) {
 		n = write(fd, ptr, toSend);
 		if(n == -1)
 			exit(1);
+		printf("%s", ptr);
 		toSend -= n;
 		ptr += n;
 	}
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+}
+
+//from socket to file
+void writeToFile(int fd, int n, char *buffer, char *filePath, int size){
+	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+	FILE *f = fopen(filePath, "w");
+	if (f == NULL)
+		exit(1);
+
+	int toSend = size;
+	int alreadyReceived = 0;
+	while(toSend > 0) {
+		fseek(f, alreadyReceived, SEEK_SET);
+		if (toSend < BUFFERSIZE){
+			n = read(fd, buffer, toSend);
+		} else {
+			n = read(fd, buffer, BUFFERSIZE);
+		}
+		if(n == -1)
+			exit(1);
+		fwrite(buffer, 1, n, f);
+		toSend -= n;
+		alreadyReceived += n;
+		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+	}
+	fclose(f);
+}
+
+void writeToFile2(int fd, int n, char *buffer, char *filePath, int size){
+	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+	FILE *f = fopen(filePath, "wb");
+	if (f == NULL)
+		exit(1);
+
+	int toSend = size;
+	int alreadyReceived = 0;
+	while(toSend > 0) {
+		fseek(f, alreadyReceived, SEEK_SET);
+		if (toSend < BUFFERSIZE){
+			n = read(fd, buffer, toSend);
+		} else {
+			n = read(fd, buffer, BUFFERSIZE);
+		}
+		if(n == -1)
+			exit(1);
+		fwrite(buffer, 1, n, f);
+		printf("->>>\n");
+		toSend -= n;
+		alreadyReceived += n;
+		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+	}
+	fclose(f);
 }
 
 void writeFromFile(int fd, int n, char *buffer, char *filePath, int size){
@@ -91,18 +145,22 @@ void writeFromFile(int fd, int n, char *buffer, char *filePath, int size){
 		if (toSend < BUFFERSIZE){
 			n=toSend;
 			fread(buffer, 1, toSend, f);
+			//printf("\nREADbuffer->//INICIO// %s //FIM//\n",buffer);
 			//n = write(fd, buffer, toSend);
 			writeTokenToServer(fd, n, buffer);
 		} else {
 			n=BUFFERSIZE;
 			fread(buffer, 1, BUFFERSIZE, f);
+			//printf("\nREADbuffer->//INICIO// %s //FIM//\n",buffer);
 			//n = write(fd, buffer, BUFFERSIZE);
 			writeTokenToServer(fd, n, buffer);
 		}
 		if(n == -1)
 			exit(1);
 		toSend -= n;
+		//printf("toSend ->%d\n", toSend);
 		alreadyReceived += n;
+		//printf("alreadyReceived ->%d\n", alreadyReceived);
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 	}
 	fclose(f);
@@ -122,13 +180,15 @@ void writeFromFile2(int fd, int n, char *buffer, char *filePath, int size){
 		if (toSend < BUFFERSIZE){
 			n=toSend;
 			fread(buffer, 1, toSend, f);
+			//printf("\nREADbuffer->//INICIO// %s //FIM//\n",buffer);
 			//n = write(fd, buffer, toSend);
-			writeTokenToServer(fd, n, buffer);
+			writeTokenToServer2(fd, n, buffer, toSend);
 		} else {
 			n=BUFFERSIZE;
 			fread(buffer, 1, BUFFERSIZE, f);
+			//printf("\nREADbuffer->//INICIO// %s //FIM//\n",buffer);
 			//n = write(fd, buffer, BUFFERSIZE);
-			writeTokenToServer(fd, n, buffer);
+			writeTokenToServer2(fd, n, buffer, BUFFERSIZE);
 		}
 		if(n == -1)
 			exit(1);
