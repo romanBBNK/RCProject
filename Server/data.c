@@ -244,10 +244,18 @@ int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *
     char *folderPath;
     struct question* currentQuestion;
 
-    //Adds the question to program memory
-    if( (currentQuestion = addNewQuestion(parentTopic, Title, Author, imgExt))->number == 0){
-        //Question cannot be added (full or duplicate)
-        return currentQuestion->replies_number;
+    if(imgExt==NULL){
+        //Adds the question to program memory
+        if( (currentQuestion = addNewQuestion(parentTopic, Title, Author, "NULL"))->number == 0){
+            //Question cannot be added (full or duplicate)
+            return currentQuestion->replies_number;
+        }
+    } else{
+        //Adds the question to program memory
+        if( (currentQuestion = addNewQuestion(parentTopic, Title, Author, imgExt))->number == 0){
+            //Question cannot be added (full or duplicate)
+            return currentQuestion->replies_number;
+        }
     }
 
     //Sets the path for the folder and creates it. It will be "./Data/<topicName>/<questionTitle>
