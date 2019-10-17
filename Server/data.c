@@ -165,12 +165,7 @@ struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Au
     newQuestion->replies_number = 0;
 
     newQuestion->imgExt = (char *)malloc(5*sizeof(char));
-    if(imgExt!=NULL) {
-        strcpy(newQuestion->imgExt, imgExt);
-    } else {
-        strcpy(newQuestion->imgExt, "NULL");
-    }
-
+    strcpy(newQuestion->imgExt, imgExt);
 
     newQuestion->answers = NULL;
     newQuestion->next = NULL;
@@ -320,12 +315,8 @@ struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *A
 
     newAnswer->number = parentQuestion->replies_number + 1;
 
-    newAnswer->imgExt = (char *)malloc(3*sizeof(char));
-    if(imgExt!=NULL) {
-        strcpy(newAnswer->imgExt, imgExt);
-    } else {
-        strcpy(newAnswer->imgExt, "NULL");
-    }
+    newAnswer->imgExt = (char *)malloc(5*sizeof(char));
+    strcpy(newAnswer->imgExt, imgExt);
 
     newAnswer->next = NULL;
 
@@ -471,7 +462,7 @@ int retrieveStoredData(){
         readTopicAuthor[readAuthor - 1] = '\0';
 
         //Saves the topic and calls the function to pursue questions related to the topic
-        if( (currentTopic = addNewTopic(readTopicName, readTopicAuthor)) == NULL){
+        if( (currentTopic = addNewTopic(readTopicName, readTopicAuthor))->number == 0){
             printf("Error adding topic to memory.\n");
             exit(-1);
         }
@@ -540,7 +531,7 @@ int retrieveStoredQuestions(struct topic* currentTopic){
         readImgPath[readImage - 1] = '\0';
 
         //Saves the question and calls the function to pursue answers related to the question
-        if( (currentQuestion = addNewQuestion(currentTopic, readQstTitle, readQstAuthor, readImgPath)) == NULL){
+        if( (currentQuestion = addNewQuestion(currentTopic, readQstTitle, readQstAuthor, readImgPath))->number == 0){
             printf("Error adding question to memory.\n");
             exit(-1);
         }
@@ -613,7 +604,7 @@ int retrieveStoredAnswers(struct topic* currentTopic, struct question* currentQu
         readImgPath[readImage - 1] = '\0';
 
         //Saves the topic and calls the function to pursue questions related to the topic
-        if( (currentAnswer = addNewAnswer(currentQuestion, readAnsName, readAnsAuthor, readImgPath)) == NULL){
+        if( (currentAnswer = addNewAnswer(currentQuestion, readAnsName, readAnsAuthor, readImgPath))->name == NULL){
             printf("Error adding answer to memory.\n");
             exit(-1);
         }
@@ -666,7 +657,7 @@ int generateFilePath(char* topic, char* question, char* answer, char *imgExt, ch
         strcat(targetPath, question);
         strcat(targetPath, ".");
         //Checks if the path is for an image or text
-        if(imgExt == NULL){
+        if(strcmp(imgExt, "NULL") == 0){
             //Current path: ./Data/topic/question/question.txt
             strcat(targetPath, "txt");
             return 0;
@@ -688,7 +679,7 @@ int generateFilePath(char* topic, char* question, char* answer, char *imgExt, ch
         strcat(targetPath, answer);
         strcat(targetPath, ".");
         //Checks if the path is for an image or text
-        if(imgExt == NULL){
+        if(strcmp(imgExt, "NULL") == 0){
             //Current path: ./Data/topic/question/answer/answer.txt
             strcat(targetPath, "txt");
             return 0;
