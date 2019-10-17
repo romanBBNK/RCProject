@@ -30,6 +30,7 @@ void validReg(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer,
 
 void topic_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char count[], int topic_counter) {
 	write(1,"List topics\n",12);
+	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
     sprintf(count, "%d", topic_counter);
 	strcat(buffer, "LTR ");
@@ -49,29 +50,29 @@ void topic_propose(int fd, int addrlen, int n, struct sockaddr_in addr, char *bu
 	userID = strtok(NULL, " "); // parse = userID
 	parse = strtok(NULL, "\n"); // parse = topic
 
-	saveNewTopic(parse, userID);
+	int status = saveNewTopic(parse, userID);
 	
-/*	if ((strcmp(status, "OK") == 0)) {
-*/		write(1, "Topic ", 6);
+	if (status == 0) {
+		write(1, "Topic ", 6);
 		write(1, parse, strlen(parse));
 		write(1, " was successfully created by ", 29);
 		write(1, userID, 5);
 		write(1, "\n", 1);
-		n=sendto(fd,"PTR OK\n",6,0,(struct sockaddr*) &addr, addrlen);
-/*	} else if ((strcmp(status, "DUP") == 0)) {
+		n=sendto(fd,"PTR OK\n",7,0,(struct sockaddr*) &addr, addrlen);
+	} else if (status == 2) {
 		write(1, "Topic ", 6);
 		write(1, parse, strlen(parse));
 		write(1, " already exists\n", 16);
-		n=sendto(fd,"PTR DUP\n",7,0,(struct sockaddr*) &addr, addrlen);
-	} else if ((strcmp(status, "FUL") == 0)) {
+		n=sendto(fd,"PTR DUP\n",8,0,(struct sockaddr*) &addr, addrlen);
+	} else if (status == 1) {
 		write(1, "Topic list is full\n", 19);
-		n=sendto(fd,"PTR FUL\n",7,0,(struct sockaddr*) &addr, addrlen);
+		n=sendto(fd,"PTR FUL\n",8,0,(struct sockaddr*) &addr, addrlen);
 	} else {
 		write(1, "Topic ", 6);
 		write(1, parse, strlen(parse));
 		write(1, " has not been created\n", 22);
-		n=sendto(fd,"PTR NOK\n",7,0,(struct sockaddr*) &addr, addrlen);
-	}*/
+		n=sendto(fd,"PTR NOK\n",8,0,(struct sockaddr*) &addr, addrlen);
+	}
 }
 
 void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *buffer, char *parse) {
