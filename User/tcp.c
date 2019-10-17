@@ -411,6 +411,17 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 		memset(answerFilePath, '\0', sizeof(char)*100);
 		memset(answerImageFilePath, '\0', sizeof(char)*100);
 	}
+	free(questionFilePath);
+	free(questionImageFilePath);
+	free(answerFilePath);
+	free(answerImageFilePath);
+	free(extension);
+	free(answerID);
+	free(targetPath);
+	free(aUserID);
+	free(qUserID);
+	free(questionFilePath);
+
 }
 
 void question_submit(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *userID, 
