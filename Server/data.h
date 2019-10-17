@@ -46,7 +46,8 @@ int saveNewTopic(char *Name, char *Author);
 //Question related functions
 struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imgExt);
 struct question* getQuestion(char *topicName, char *questionTitle, int questionNumber);
-void getQuestionList(char *buffer, char *topicName);
+int getQuestionList(char *buffer, char *topicName);
+int getLQuestionList(char *buffer, char *topicName);
 int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imgExt);
 
 

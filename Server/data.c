@@ -204,7 +204,7 @@ struct question* getQuestion(char *topicName, char *questionTitle, int questionN
     }
     return NULL;
 }
-void getQuestionList(char *buffer, char *topicName){
+int getQuestionList(char *buffer, char *topicName){
 
     struct topic* parentTopic;
     struct question* current;
@@ -218,7 +218,7 @@ void getQuestionList(char *buffer, char *topicName){
 
     if(parentTopic == NULL) {
         strcat(buffer, "0");
-        return;
+        return -1;
     }
     sprintf(count, "%d", parentTopic->question_counter);
     strcat(buffer, count);
@@ -237,6 +237,10 @@ void getQuestionList(char *buffer, char *topicName){
         strcat(buffer, num);
         current = current->next;
     }
+    return 0;
+}
+int getLQuestionList(char *buffer, char *topicName){
+    return 0;
 }
 int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imgExt){
 
@@ -266,7 +270,8 @@ int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *
     strcat(folderPath, parentTopic->name);
     strcat(folderPath, "/");
     strcat(folderPath, currentQuestion->title);
-    if( mkdir(folderPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1){
+    errno=0;
+    if( mkdir(folderPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) !=0 && errno != EEXIST){
         printf("Error creating question folder.\n");
         exit(-1);
     }
@@ -389,7 +394,8 @@ int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Auth
     strcat(folderPath, parentQuestion->title);
     strcat(folderPath, "/");
     strcat(folderPath, currentAnswer->name);
-    if( mkdir(folderPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1){
+    errno = 0;
+    if( mkdir(folderPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) !=0 && errno != EEXIST){
         printf("Error creating answer folder.\n");
         exit(-1);
     }
@@ -406,7 +412,7 @@ int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Auth
     }
     fprintf(answersFile, "%s\n", currentAnswer->name);
     fprintf(answersFile, "%s\n", Author);
-    fprintf(answersFile, "%s\n", imgExt);
+    fprintf(answersFile, "%s\n", currentAnswer->imgExt);
     fclose(answersFile);
 
     free(answerName);
