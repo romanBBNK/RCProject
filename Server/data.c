@@ -33,6 +33,7 @@ struct topic* addNewTopic(char *Name, char *Author){
             if(strcmp(current->name, Name)==0){
                 newTopic->number = 0;
                 newTopic->question_counter = 2;
+                return newTopic;
             }
             current = current->next;
         }
@@ -163,8 +164,9 @@ struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Au
     newQuestion->number = parentTopic->question_counter + 1;
     newQuestion->replies_number = 0;
 
-    newQuestion->imgExt = (char *)malloc(strlen(imgExt)*sizeof(char));
-    strcpy(newQuestion->imgExt, imgExt);
+    newQuestion->imgExt = (char *)malloc(3*sizeof(char));
+    if(imgExt!=NULL)
+        strcpy(newQuestion->imgExt, imgExt);
 
     newQuestion->answers = NULL;
     newQuestion->next = NULL;
