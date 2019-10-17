@@ -38,7 +38,7 @@ void reg(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in ad
 	}
 }
 
-void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char **topicList) {
+int topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char **topicList) {
 	n = sendto(fd, buffer, strlen(buffer), 0, res->ai_addr, res->ai_addrlen);
 	if(n == -1)
 		exit(1);
@@ -77,6 +77,8 @@ void topic_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockadd
 		write(1, parse, strlen(parse));
 		write(1, ")\n", 2);
 	}
+	free(num);
+	return size;
 }
 
 void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *userID, char *topic) {
@@ -118,7 +120,7 @@ void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 	}
 }
 
-void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *topic, char** questionList) {
+int question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char *parse, char *topic, char** questionList) {
 	strcat(buffer, "LQU ");
 	strcat(buffer, topic);
 	strcat(buffer, "\n");
@@ -164,4 +166,6 @@ void question_list(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 		parse = strtok(NULL, " \n");
 		write(1, "\n", 1);
 	}
+	free(num);
+	return size;
 }

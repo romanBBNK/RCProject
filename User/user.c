@@ -51,8 +51,10 @@ int main(int argc, char *argv[]){
 	char *buffer = (char *)malloc(BUFFERSIZE*sizeof(char));
 	char** topicList = (char**)malloc(99*sizeof(char*));
 	bool topicListOn = false;
+	int topicListSize = 0;
 	char** questionList = (char**)malloc(99*sizeof(char*));
 	bool questionListOn = false;
+	int questionListSize = 0;
 	char *topic = (char *)malloc(10*sizeof(char));
 	memset(topic, '\0', sizeof(char)*10);
 	int topic_number;
@@ -69,6 +71,7 @@ int main(int argc, char *argv[]){
 	struct addrinfo hintsTCP, *resTCP;
 	struct sockaddr_in addrTCP;
 	char *question = (char *)malloc(10*sizeof(char));
+	bool questionOn = false;
 	char *textFile = (char *)malloc(128*sizeof(char));
 	char *imageFile = (char *)malloc(128*sizeof(char));
 	memset(&hintsTCP, 0, sizeof hintsTCP);
@@ -78,8 +81,8 @@ int main(int argc, char *argv[]){
 
 	parseArgs(argc, (char** const)argv);
 
-	n = getaddrinfo(ip, port, &hints, &res);
-	//n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
+	//n = getaddrinfo(ip, port, &hints, &res);
+	n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
 	if(n != 0)
 		exit(1);
 
@@ -90,8 +93,8 @@ int main(int argc, char *argv[]){
 	struct timeval timeout={3,0};
 	setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(struct timeval));
 
-	nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
-	//nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
+	//nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
+	nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
 	if(nTCP != 0)
 		exit(1);
 	
@@ -121,7 +124,7 @@ int main(int argc, char *argv[]){
 		} else if ( (strcmp(command, "topic_list") == 0) || (strcmp(command, "tl") == 0)){
 			strcat(buffer, "LTP");
 			strcat(buffer, "\n");
-			topic_list(fd, addrlen, n, res, addr, buffer, parse, topicList);
+			topicListSize = topic_list(fd, addrlen, n, res, addr, buffer, parse, topicList);
 			topicListOn = true;
 		} else if ((strcmp(command, "topic_select") == 0) && (topicListOn == true)){
 			memset(topic, '\0', sizeof(char)*10);
@@ -135,7 +138,7 @@ int main(int argc, char *argv[]){
 			scanf("%s", topic);
 			topic_propose(fd, addrlen, n, res, addr, buffer, parse, userID, topic);
 		} else if ( ((strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)) && (strlen(topic) > 0)){
-			question_list(fd, addrlen, n, res, addr, buffer, parse, topic, questionList);
+			questionListSize = question_list(fd, addrlen, n, res, addr, buffer, parse, topic, questionList);
 			questionListOn = true;
 		} else if ((strcmp(command, "question_get") == 0) && (questionListOn == true)){
 			memset(question, '\0', sizeof(char)*10);
@@ -147,6 +150,7 @@ int main(int argc, char *argv[]){
 			if(nTCP==-1)
 				exit(1);
 			scanf("%s", question);
+			questionOn = true;
 			question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, topic, question);
 		} else if ((strcmp(command, "qg") == 0) && (questionListOn == true)) {
 			memset(question, '\0', sizeof(char)*10);
@@ -159,6 +163,7 @@ int main(int argc, char *argv[]){
 				exit(1);
 			scanf("%d", &question_number);
 			strcat(question, questionList[question_number]);
+			questionOn = true;
 			question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, topic, question);
 		} else if ( ((strcmp(command, "question_submit") == 0) || (strcmp(command, "qs") == 0)) && (userIdOn == true)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
@@ -190,7 +195,11 @@ int main(int argc, char *argv[]){
 			else {
 				write(1, "invalid command!\n", 17);
 			}
-		} else if ( (strcmp(command, "answer_submit") == 0) || (strcmp(command, "as") == 0)){
+			for(int i=0; i < questionListSize; i++) {
+				free(questionList[i]);
+			}
+			free(questionList);
+		} else if ( ((strcmp(command, "answer_submit") == 0) || (strcmp(command, "as") == 0)) && (userIdOn == true) && (questionOn == true)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
 			if(fdTCP == -1)
 				exit(1);
@@ -234,8 +243,17 @@ int main(int argc, char *argv[]){
 		scanf("%s", command);
 	}
 
-	free(userID);
+	for(int i=0; i < questionListSize; i++) {
+		free(questionList[i]);
+	}
+	free(questionList);
+
+	for(int i=0; i < topicListSize; i++) {
+		free(topicList[i]);
+	}
 	free(topicList);
+
+	free(userID);
 	free(topic);
 	free(buffer);
 	freeaddrinfo(res);
