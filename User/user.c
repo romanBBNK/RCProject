@@ -78,8 +78,8 @@ int main(int argc, char *argv[]){
 
 	parseArgs(argc, (char** const)argv);
 
-	//n = getaddrinfo(ip, port, &hints, &res);
-	n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
+	n = getaddrinfo(ip, port, &hints, &res);
+	//n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
 	if(n != 0)
 		exit(1);
 
@@ -90,8 +90,8 @@ int main(int argc, char *argv[]){
 	struct timeval timeout={3,0};
 	setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(struct timeval));
 
-	//nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
-	nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
+	nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
+	//nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
 	if(nTCP != 0)
 		exit(1);
 	
@@ -217,6 +217,16 @@ int main(int argc, char *argv[]){
 			} else {
 				write(1, "invalid command!\n", 17);
 			}
+		} else if ( (strcmp(command, "a") == 0)){
+			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+			if(fdTCP == -1)
+				exit(1);
+
+			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+			if(nTCP==-1)
+				exit(1);
+
+			question_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, "12345", "wifi", "quest_name", "question.txt", "question_mark.jpg");
 		}
 		else {
 			write(1, "invalid command!\n", 17);

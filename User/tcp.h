@@ -3,7 +3,7 @@
 
 void readTokenFromServer(int fd, int n, char *buffer);
 
-void connectTCP(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr);
+void writeToFile(int fd, int n, char *buffer, char *filePath, int size);
 
 void question_get(int fd, int addrlen, int n, struct addrinfo *res, struct sockaddr_in addr, char *buffer, char* parse, char *topic, char *question);
 
