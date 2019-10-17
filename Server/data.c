@@ -494,9 +494,17 @@ int retrieveStoredQuestions(struct topic* currentTopic){
     strcat(questionsFilePath, "/questions.txt");
 
     //Opens questions.txt
-    if((questionsFile = fopen(questionsFilePath, "r")) == NULL){
-        printf("Error reading questions.txt.\n");
-        exit(-1);
+
+    if( access(questionsFilePath, F_OK) != -1){
+        //File exists
+        if((questionsFile = fopen(questionsFilePath, "r")) == NULL){
+            printf("Error reading questions.txt.\n");
+            exit(-1);
+        }
+    } else{
+        //questions.txt doesn't exist (this means it's the first time the server is run and there is no previous
+        //Data to load. Returns.
+        return 0;
     }
 
     //Reads a question and acts appropriately
@@ -560,9 +568,16 @@ int retrieveStoredAnswers(struct topic* currentTopic, struct question* currentQu
     strcat(answersFilePath, "/answers.txt");
 
     //Opens answers.txt
-    if((answersFile = fopen(answersFilePath, "r")) == NULL){
-        printf("Error reading answers.txt.\n");
-        exit(-1);
+    if( access(answersFilePath, F_OK) != -1){
+        //File exists
+        if((answersFile = fopen(answersFilePath, "r")) == NULL){
+            printf("Error reading answers.txt.\n");
+            exit(-1);
+        }
+    } else{
+        //answers.txt doesn't exist (this means it's the first time the server is run and there is no previous
+        //Data to load. Returns.
+        return 0;
     }
 
     //Reads an answer and acts appropriately
