@@ -419,6 +419,15 @@ int retrieveStoredData(){
 
     readTopicName = (char *)malloc(12 * sizeof(char));
     readTopicAuthor = (char *)malloc(7 * sizeof(char));
+
+    //Checks if the data folder exists and creates it otherwise
+    errno = 0;
+    if( mkdir("./Data", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) !=0 && errno != EEXIST){
+        printf("Error creating Data folder.\n");
+        return -1;
+    }
+
+    //Checks if topics.txt exists (and therefore if there is data to retrieve or not)
     if( access("./Data/topics.txt", F_OK) != -1){
         //File exists
         if((topicsFile = fopen("./Data/topics.txt", "r")) == NULL){
