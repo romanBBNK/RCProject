@@ -115,9 +115,9 @@ void question_get(int fd, int addrlen, int n, char *buffer, char *parse, int new
 */	
 	int num = atol(question);
 	if (num == 0){
-		questionInfo = getQuestion(NULL, topic, question, 0);
+		questionInfo = getQuestion(topic, question, 0);
 	} else {
-		questionInfo = getQuestion(NULL, topic, NULL, num);
+		questionInfo = getQuestion(topic, NULL, num);
 	}
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
@@ -139,7 +139,7 @@ void question_get(int fd, int addrlen, int n, char *buffer, char *parse, int new
 		writeFromBuffer(newfd, n, buffer, toSend);
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 		writeFromFile(newfd, n, questionFilePath, size);
-		if (questionInfo->imageFilePath == NULL){
+		if (questionInfo->imgExt == NULL){
 			strcat(buffer, " 0");
 
 			writeFromBuffer(newfd, n, buffer, 2);
@@ -176,7 +176,7 @@ void question_get(int fd, int addrlen, int n, char *buffer, char *parse, int new
 			memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 			writeFromFile(newfd, n, answerFilePath, size);
 
-			if (answerInfo->imageFilePath == NULL){
+			if (answerInfo->imgExt == NULL){
 				strcat(buffer, " 0");
 
 				writeFromBuffer(newfd, n, buffer, 2);

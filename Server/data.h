@@ -15,7 +15,7 @@ struct answer {
     char *name;
     char *author;
     int number;
-    char *imageFilePath;
+    char *imgExt;
     struct answer* next;
 };
 struct question{
@@ -23,7 +23,7 @@ struct question{
     char *author;
     int number;
     int replies_number;
-    char *imageFilePath;
+    char *imgExt;
     struct answer* answers;
     struct question* next;
 };
@@ -44,16 +44,16 @@ void getTopicList(char *buffer);
 int saveNewTopic(char *Name, char *Author);
 
 //Question related functions
-struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imageFilePath);
-struct question* getQuestion(struct topic* parentTopic, char *topicName, char *questionTitle, int questionNumber);
+struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imgExt);
+struct question* getQuestion(char *topicName, char *questionTitle, int questionNumber);
 void getQuestionList(char *buffer, char *topicName);
-int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imageFilePath);
+int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imgExt);
 
 
 //Answer related functions
-struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *Author, char *imageFilePath);
-struct answer* getAnswer();
-int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Author, char *imageFilePath);
+struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *Author, char *imgExt);
+struct answer* getAnswer(char *parentTopic, char *parentQuestion, int answerNumber);
+int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Author, char *imgExt);
 
 //data storage/retrieval functions
 int retrieveStoredData();

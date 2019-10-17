@@ -129,7 +129,7 @@ int saveNewTopic(char *Name, char *Author){
 
 
 //Question related functions
-struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imageFilePath){
+struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imgExt){
 
     struct question* newQuestion = (struct question*) malloc(sizeof(struct question));
     struct question* current;
@@ -163,8 +163,8 @@ struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Au
     newQuestion->number = parentTopic->question_counter + 1;
     newQuestion->replies_number = 0;
 
-    newQuestion->imageFilePath = (char *)malloc(strlen(imageFilePath)*sizeof(char));
-    strcpy(newQuestion->imageFilePath, imageFilePath);
+    newQuestion->imgExt = (char *)malloc(strlen(imgExt)*sizeof(char));
+    strcpy(newQuestion->imgExt, imgExt);
 
     newQuestion->answers = NULL;
     newQuestion->next = NULL;
@@ -181,18 +181,13 @@ struct question* addNewQuestion(struct topic* parentTopic, char *Title, char *Au
     }
     return newQuestion;
 }
-struct question* getQuestion(struct topic* parentTopic, char *topicName, char *questionTitle, int questionNumber){
+struct question* getQuestion(char *topicName, char *questionTitle, int questionNumber){
     /*
-     * If parentTopic is specified, gets the question from the parentTopic instead of searching for the topic. If parentTopic is NULL, gets the topic through the same info as
-     * getTopic() and then gets the question. Returns NULL if question not found.
+     * Returns NULL if question not found.
      */
     struct question* current;
 
-    if(parentTopic != NULL){
-        current = parentTopic->questions;
-    } else {
-        current = (getTopic(topicName))->questions;
-    }
+    current = (getTopic(topicName))->questions;
     if(questionNumber!=0){
         while(current!=NULL) {
             if (current->number == questionNumber)
@@ -242,14 +237,14 @@ void getQuestionList(char *buffer, char *topicName){
         current = current->next;
     }
 }
-int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imageFilePath){
+int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imgExt){
 
     FILE *questionsFile;
     char *folderPath;
     struct question* currentQuestion;
 
     //Adds the question to program memory
-    if( (currentQuestion = addNewQuestion(parentTopic, Title, Author, imageFilePath))->number == 0){
+    if( (currentQuestion = addNewQuestion(parentTopic, Title, Author, imgExt))->number == 0){
         //Question cannot be added (full or duplicate)
         return currentQuestion->replies_number;
     }
@@ -267,7 +262,7 @@ int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *
         exit(-1);
     }
 
-    //Opens/creates "./Data/<topicName>/questions.txt", and appends topic info
+    //Opens/creates "./Data/<topicName>/questions.txt", and appends question info
     strcpy(folderPath, "./Data/");
     strcat(folderPath, parentTopic->name);
     strcat(folderPath, "/questions.txt");
@@ -277,7 +272,7 @@ int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *
     }
     fprintf(questionsFile, "%s\n", Title);
     fprintf(questionsFile, "%s\n", Author);
-    fprintf(questionsFile, "%s\n", imageFilePath);
+    fprintf(questionsFile, "%s\n", imgExt);
     fclose(questionsFile);
 
     free(folderPath);
@@ -287,7 +282,7 @@ int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *
 
 
 //Answer related functions
-struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *Author, char *imageFilePath){
+struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *Author, char *imgExt){
 
     struct answer* newAnswer = (struct answer*) malloc(sizeof(struct answer));
     struct answer* current;
@@ -319,8 +314,8 @@ struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *A
 
     newAnswer->number = parentQuestion->replies_number + 1;
 
-    newAnswer->imageFilePath = (char *)malloc(strlen(imageFilePath)*sizeof(char));
-    strcpy(newAnswer->imageFilePath, Name);
+    newAnswer->imgExt = (char *)malloc(strlen(imgExt)*sizeof(char));
+    strcpy(newAnswer->imgExt, Name);
 
     newAnswer->next = NULL;
 
@@ -336,11 +331,21 @@ struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *A
 
     return newAnswer;
 }
-struct answer* getAnswer(){
-    //TODO getAnswer() function
-    return 0;
+struct answer* getAnswer(char *parentTopic, char *parentQuestion, int answerNumber){
+
+    struct answer* current;
+
+    current = (getQuestion(parentTopic, parentQuestion, 0))->answers;
+    if(answerNumber!=0){
+        while(current!=NULL) {
+            if (current->number == answerNumber)
+                return current;
+            current = current->next;
+        }
+    }
+    return NULL;
 }
-int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Author, char *imageFilePath){
+int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Author, char *imgExt){
 
     FILE *answersFile;
     char *folderPath;
@@ -356,7 +361,7 @@ int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Auth
     strcat(answerName, numBuf);
 
     //Adds the answer to program memory
-    if( (currentAnswer = addNewAnswer(parentQuestion, answerName, Author, imageFilePath))->name == NULL)
+    if( (currentAnswer = addNewAnswer(parentQuestion, answerName, Author, imgExt))->name == NULL)
         return currentAnswer->number;
 
     //Sets the path for the folder and creates it. It will be "./Data/<topicName>/<questionTitle>/<Answer_title>
@@ -386,7 +391,7 @@ int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Auth
     }
     fprintf(answersFile, "%s\n", currentAnswer->name);
     fprintf(answersFile, "%s\n", Author);
-    fprintf(answersFile, "%s\n", imageFilePath);
+    fprintf(answersFile, "%s\n", imgExt);
     fclose(answersFile);
 
     free(answerName);
