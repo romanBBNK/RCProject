@@ -54,6 +54,7 @@ int main(int argc, char *argv[]){
 	char** questionList = (char**)malloc(99*sizeof(char*));
 	bool questionListOn = false;
 	char *topic = (char *)malloc(10*sizeof(char));
+	memset(topic, '\0', sizeof(char)*10);
 	int topic_number;
 	int question_number;
 	char *userID = (char *)malloc(5*sizeof(char));
@@ -133,7 +134,7 @@ int main(int argc, char *argv[]){
 			memset(topic, '\0', sizeof(char)*10);
 			scanf("%s", topic);
 			topic_propose(fd, addrlen, n, res, addr, buffer, parse, userID, topic);
-		} else if ( (strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)){
+		} else if ( ((strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)) && (strlen(topic) > 0)){
 			question_list(fd, addrlen, n, res, addr, buffer, parse, topic, questionList);
 			questionListOn = true;
 		} else if ((strcmp(command, "question_get") == 0) && (questionListOn == true)){
