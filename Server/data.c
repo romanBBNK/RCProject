@@ -14,7 +14,7 @@
 #define BUFFERSIZE 10000
 #define MAXMSGSIZE 2048
 
-//Topic related questions
+//Topic related function
 struct topic* addNewTopic(char *Name, char *Author){
     //Appends a new topic to the end of the topic list.
     struct topic* newTopic = (struct topic*) malloc(sizeof(struct topic));
@@ -374,7 +374,6 @@ struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *A
         parentQuestion->answers = newAnswer;
         parentQuestion->replies_number = parentQuestion->replies_number + 1;
     } else{
-        newAnswer->next = (parentQuestion->answers);
         (parentQuestion->answers)->next = newAnswer;
         parentQuestion->replies_number = parentQuestion->replies_number + 1;
     }
@@ -406,10 +405,11 @@ int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Auth
     //Creates the name for the answer, <question>_XX
     answerName = (char *)malloc(20 * sizeof(char));
     strcpy(answerName, parentQuestion->title);
-    strcat(answerName, "_");
-    sprintf(numBuf, "%d", parentQuestion->replies_number);
+    if(parentQuestion->replies_number <=8){ strcat(answerName, "_0");
+    } else { strcat(answerName, "_"); }
+    sprintf(numBuf, "%d", parentQuestion->replies_number + 1);
     strcat(answerName, numBuf);
-
+    
     if(imgExt==NULL) {
         //Adds the answer to program memory
         if ((currentAnswer = addNewAnswer(parentQuestion, answerName, Author, "NULL"))->name == NULL)
