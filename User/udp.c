@@ -97,7 +97,6 @@ void topic_propose(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 		exit(1);
 
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
-	memset(topic, '\0', sizeof(char)*10);
 
 	addrlen = sizeof(addr);
 	n = recvfrom(fd, buffer, BUFFERSIZE, 0, (struct sockaddr*) &addr, &addrlen);

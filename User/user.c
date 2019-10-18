@@ -81,8 +81,8 @@ int main(int argc, char *argv[]){
 
 	parseArgs(argc, (char** const)argv);
 
-	n = getaddrinfo(ip, port, &hints, &res);
-	//n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
+	//n = getaddrinfo(ip, port, &hints, &res);
+	n = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hints, &res);
 	if(n != 0)
 		exit(1);
 
@@ -93,8 +93,8 @@ int main(int argc, char *argv[]){
 	struct timeval timeout={3,0};
 	setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(struct timeval));
 
-	nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
-	//nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
+	//nTCP = getaddrinfo(ip, port, &hintsTCP, &resTCP);
+	nTCP = getaddrinfo("tejo.tecnico.ulisboa.pt", "58011", &hintsTCP, &resTCP);
 	if(nTCP != 0)
 		exit(1);
 	
@@ -126,79 +126,108 @@ int main(int argc, char *argv[]){
 			strcat(buffer, "\n");
 			topicListSize = topic_list(fd, addrlen, n, res, addr, buffer, parse, topicList);
 			topicListOn = true;
-		} else if ((strcmp(command, "topic_select") == 0) && (topicListOn == true)){
-			memset(topic, '\0', sizeof(char)*10);
-			scanf("%s", topic);
-		} else if ((strcmp(command, "ts") == 0) && (topicListOn == true)){
-			memset(topic, '\0', sizeof(char)*10);
-			scanf("%d", &topic_number);
-			strcat(topic, topicList[topic_number]);
+		} else if (strcmp(command, "topic_select") == 0){
+			if(topicListOn == true) {
+				memset(topic, '\0', sizeof(char)*10);
+				scanf("%s", topic);
+			} else {
+				while(getchar() != '\n');
+				write(1, "There is no topic list yet\n", 27);
+			}
+		} else if (strcmp(command, "ts") == 0){
+			if(topicListOn == true) {
+				memset(topic, '\0', sizeof(char)*10);
+				scanf("%d", &topic_number);
+				strcat(topic, topicList[topic_number]);
+			} else {
+				while(getchar() != '\n');
+				write(1, "There is no topic list yet\n", 27);
+			}
 		} else if ( (strcmp(command, "topic_propose") == 0) || (strcmp(command, "tp") == 0)){
 			memset(topic, '\0', sizeof(char)*10);
 			scanf("%s", topic);
 			topic_propose(fd, addrlen, n, res, addr, buffer, parse, userID, topic);
-		} else if ( ((strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)) && (strlen(topic) > 0)){
-			questionListSize = question_list(fd, addrlen, n, res, addr, buffer, parse, topic, questionList);
-			questionListOn = true;
-		} else if ((strcmp(command, "question_get") == 0) && (questionListOn == true)){
-			memset(question, '\0', sizeof(char)*10);
-			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
-			if(fdTCP == -1)
-				exit(1);
+		} else if ((strcmp(command, "question_list") == 0) || (strcmp(command, "ql") == 0)){
+			if (strlen(topic) > 0) {
+				questionListSize = question_list(fd, addrlen, n, res, addr, buffer, parse, topic, questionList);
+				questionListOn = true;
+			} else {
+				while(getchar() != '\n');
+				write(1, "Topic not selected\n", 19);
+			}
+		} else if ((strcmp(command, "question_get") == 0)){
+			if (questionListOn == true) {
+				memset(question, '\0', sizeof(char)*10);
+				fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+				if(fdTCP == -1)
+					exit(1);
 
-			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
-			if(nTCP==-1)
-				exit(1);
-			scanf("%s", question);
-			questionOn = true;
-			question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, topic, question);
-		} else if ((strcmp(command, "qg") == 0) && (questionListOn == true)) {
-			memset(question, '\0', sizeof(char)*10);
-			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
-			if(fdTCP == -1)
-				exit(1);
+				nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+				if(nTCP==-1)
+					exit(1);
+				scanf("%s", question);
+				questionOn = true;
+				question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, topic, question);
+			} else {
+				while(getchar() != '\n');
+				write(1, "There is no question list yet\n", 30);
+			}
+		} else if ((strcmp(command, "qg") == 0)) {
+			if (questionListOn == true) {
+				memset(question, '\0', sizeof(char)*10);
+				fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+				if(fdTCP == -1)
+					exit(1);
 
-			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
-			if(nTCP==-1)
-				exit(1);
-			scanf("%d", &question_number);
-			strcat(question, questionList[question_number]);
-			questionOn = true;
-			question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, topic, question);
-		} else if ( ((strcmp(command, "question_submit") == 0) || (strcmp(command, "qs") == 0)) && (userIdOn == true)){
-			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
-			if(fdTCP == -1)
-				exit(1);
+				nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+				if(nTCP==-1)
+					exit(1);
+				scanf("%d", &question_number);
+				strcat(question, questionList[question_number]);
+				questionOn = true;
+				question_get(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, topic, question);
+			} else {
+				while(getchar() != '\n');
+				write(1, "There is no question list yet\n", 30);
+			}	
+		} else if ( ((strcmp(command, "question_submit") == 0) || (strcmp(command, "qs") == 0))){
+			if (userIdOn == true) {
+				fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
+				if(fdTCP == -1)
+					exit(1);
 
-			nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
-			if(nTCP==-1)
-				exit(1);
+				nTCP=connect(fdTCP,resTCP->ai_addr,resTCP->ai_addrlen);
+				if(nTCP==-1)
+					exit(1);
 
-			x=0;
-			int spaceNum = 0;
-			while ((c=getchar()) != '\n'){
-				parseTCP[x++]=c;
-				if (c == ' '){
-					spaceNum+=1;
+				x=0;
+				int spaceNum = 0;
+				while ((c=getchar()) != '\n'){
+					parseTCP[x++]=c;
+					if (c == ' '){
+						spaceNum+=1;
+					}
 				}
+				if(spaceNum == 2) {
+					question = strtok(parseTCP, " ");
+					textFile = strtok(NULL, "\n");
+					question_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, NULL);
+				} else if (spaceNum == 3){
+					question = strtok(parseTCP, " ");
+					textFile = strtok(NULL, " ");
+					imageFile = strtok(NULL, "\n");
+					question_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, imageFile);
+				} 
+				else {
+					write(1, "There are too many arguments\n", 29);
+				}
+				for(int i=0; i < questionListSize; i++) {
+					free(questionList[i]);
+				}
+			} else {
+				while(getchar() != '\n');
+				write(1, "User not registered\n", 20);
 			}
-			if(spaceNum == 2) {
-				question = strtok(parseTCP, " ");
-				textFile = strtok(NULL, "\n");
-				question_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, NULL);
-			} else if (spaceNum == 3){
-				question = strtok(parseTCP, " ");
-				textFile = strtok(NULL, " ");
-				imageFile = strtok(NULL, "\n");
-				question_submit(fdTCP, addrlenTCP, nTCP, resTCP, addrTCP, buffer, parse, userID, topic, question, textFile, imageFile);
-			} 
-			else {
-				write(1, "invalid command!\n", 17);
-			}
-			for(int i=0; i < questionListSize; i++) {
-				free(questionList[i]);
-			}
-			free(questionList);
 		} else if ( ((strcmp(command, "answer_submit") == 0) || (strcmp(command, "as") == 0)) && (userIdOn == true) && (questionOn == true)){
 			fdTCP=socket(resTCP->ai_family, resTCP->ai_socktype, resTCP->ai_protocol);
 			if(fdTCP == -1)
