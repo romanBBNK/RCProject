@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
 	topicListEnd = NULL;
 	topic_counter = 0;
 
-	int fd, addrlen, n, cnt;
+	int fd, addrlen, n;
 	struct addrinfo hints, *res;
 	struct sockaddr_in addr;
 	char *buffer = (char *)malloc(BUFFERSIZE*sizeof(char));

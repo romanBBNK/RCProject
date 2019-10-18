@@ -505,8 +505,14 @@ void answer_submit(int fd, int addrlen, int n, char *buffer, char *parse, int ne
 	int size = atol(asize);
 	printf("asize->%s\n", asize);
 
+	retrieveStoredData();
+
 	int aID = getLastAnswerNumber(getQuestion(topic, question, 0));
-	aID -= 1;
+	if(aID == -1) {
+		aID = 1;
+	} else {
+		aID += 1;
+	}
 	sprintf(answerID, "%d", aID);
 	strcpy(answerName, question);
 	if(aID < 10){
@@ -520,6 +526,7 @@ void answer_submit(int fd, int addrlen, int n, char *buffer, char *parse, int ne
 	printf(" -question:%s\n", question);
 	printf(" -answerName:%s\n", answerName);
 	generateFilePath(topic, question, answerName, NULL, targetPath);
+	printf("filePath:%s\n", targetPath);
 	printf("   -targetPath->%s\n", targetPath);
 	writeToFile(newfd, n, buffer, targetPath, size);
 	printf("escrever data\n");
@@ -552,6 +559,7 @@ void answer_submit(int fd, int addrlen, int n, char *buffer, char *parse, int ne
 		//idata
 		strcpy(getAnswer(topic, question, aID)->imgExt, iext);
 		generateFilePath(topic, question, answerName, iext, targetPath);
+		printf("filePath:%s\n", targetPath);
 
 		//strcpy(targetPath, "./imagem.jpg");
 		writeToFile2(newfd, n, buffer, targetPath, size);

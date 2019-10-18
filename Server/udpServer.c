@@ -81,9 +81,8 @@ void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *bu
 	write(1, parse, strlen(parse));
 	write(1,"\n",1);
 
-	getLastQuestionList(buffer, parse);
+	getQuestionList(buffer, parse);
 	strcat(buffer, "\n");
-	printf("%s", buffer);
 
 
 	n=sendto(fd,buffer,strlen(buffer),0,(struct sockaddr*) &addr, addrlen);
