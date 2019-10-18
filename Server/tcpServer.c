@@ -40,7 +40,7 @@ int sizeOfFile2(char* name){
 
 void readTokenFromServer(int fd, int n, char *buffer){
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
-	char caracter[1];
+	char caracter[2];
 	while(1) {
 		n = read(fd, caracter, 1);
 		if(n == -1)
@@ -479,6 +479,7 @@ void answer_submit(int fd, int addrlen, int n, char *buffer, char *parse, int ne
 	char *isize = (char *)malloc(101*sizeof(char));
 	char *answerName = (char *)malloc(14*sizeof(char));
 	char *answerID = (char *)malloc(3*sizeof(char));
+	int status;
 
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 	memset(targetPath, '\0', sizeof(char)*101);
@@ -504,13 +505,6 @@ void answer_submit(int fd, int addrlen, int n, char *buffer, char *parse, int ne
 	int size = atol(asize);
 	printf("asize->%s\n", asize);
 
-	printf(" ***question1:%s\n", question);
-	//qdata
-	int status = saveNewAnswer(topic, getQuestion(topic, question, 0), aUserID, NULL);
-	//int status = 0;
-	printf("   -status->%d\n", status);
-	//strcpy(targetPath, "./question.txt");
-	printf(" ***question2:%s\n", question);
 	int aID = getLastAnswerNumber(getQuestion(topic, question, 0));
 	aID -= 1;
 	sprintf(answerID, "%d", aID);
@@ -546,7 +540,7 @@ void answer_submit(int fd, int addrlen, int n, char *buffer, char *parse, int ne
 		strcpy(iext, buffer);
 		printf("iext->%s\n", iext);
 
-		int status = saveNewAnswer(topic, getQuestion(topic, question, 0), aUserID, iext);
+		status = saveNewAnswer(topic, getQuestion(topic, question, 0), aUserID, iext);
 		printf("   -status->%d\n", status);
 
 		//isize

@@ -41,7 +41,7 @@ int sizeOfFile2(char* name){
 
 void readTokenFromServer(int fd, int n, char *buffer){
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
-	char caracter[1];
+	char caracter[2];
 	while(1) {
 		n = read(fd, caracter, 1);
 		printf("-%s-\n", caracter);
@@ -296,7 +296,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 
 	//read info from the server token by token
-	char caracter[1];
+	char caracter[2];
 	char *qUserID = (char *)malloc(5*sizeof(char));
 	while(1) {
 		n = read(newfd, caracter, 1);
