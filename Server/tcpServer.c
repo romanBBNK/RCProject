@@ -52,7 +52,7 @@ void readTokenFromServer(int fd, int n, char *buffer){
 	}
 }
 
-void writeTokenToServer(int fd, int n, char *buffer) {
+void writeTokenToServer(int fd, int n, char *buffer){
 	int toSend = strlen(buffer);
 	char* ptr = buffer;
 	while(toSend > 0) {
@@ -65,7 +65,7 @@ void writeTokenToServer(int fd, int n, char *buffer) {
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 }
 
-void writeTokenToServer2(int fd, int n, char *buffer, int size) {
+void writeTokenToServer2(int fd, int n, char *buffer, int size){
 	int toSend = size;
 	char* ptr = buffer;
 	while(toSend > 0) {
