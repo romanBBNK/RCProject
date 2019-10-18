@@ -152,10 +152,10 @@ int main(int argc, char *argv[]){
 			if((newfd=accept(fdTCP,(struct sockaddr*)&addrTCP, &addrlenTCP)) == -1)
 				exit(1);
 
-			if ((pid = fork()) < 0) {
+			/*if ((pid = fork()) < 0) {
                 perror("Failed to create new process.");
                 exit(1);
-            } else if (pid == 0) {
+            } else if (pid == 0) {*/
             	printf("%s\n", "child created");
 				
 				char* ptr = buffer;
@@ -168,16 +168,18 @@ int main(int argc, char *argv[]){
 					ptr += n;
 				}
 
-				printf("buffer->%s\n", buffer);
-
 				if ((strcmp(buffer, "GQU ") == 0)){
 					memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 					question_get(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
 				} else if ((strcmp(buffer, "QUS ") == 0)) {
-					printf("buffer->%s\n", buffer);
 					question_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
+					memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
+					getQuestionList(buffer, "wifi");
+					printf("\nbuffer2:\n%s\n\n", buffer);
+				} else if ((strcmp(buffer, "ANS ") == 0)) {
+					answer_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
 				}
-            }
+            //}
 			close(newfd);
 		}
 	}
