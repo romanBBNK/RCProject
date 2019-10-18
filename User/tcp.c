@@ -125,7 +125,7 @@ void writeToFile2(int fd, int n, char *buffer, char *filePath, int size){
 		if(n == -1)
 			exit(1);
 		fwrite(buffer, 1, n, f);
-		printf("->>>\n");
+		printf("%s", buffer);
 		toSend -= n;
 		alreadyReceived += n;
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
