@@ -11,8 +11,11 @@ Grupo 18. Alunos:
 # Usage
 Call make to compile the project and move the executables to the current folder.
 Exectutables:
-	FS - Server executable
-	user - Client executable
+
+FS - Server executable
+	
+user - Client executable
+
 
 A Data folder will be created at the executable directory to store the Server-side data.
 
