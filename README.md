@@ -1,8 +1,11 @@
 # RCProject
 Projeto de Redes e Computadores.
 Alunos:
+
 89536 - Roman Babynyuk
+
 89484 - Joao Ribeiro Dias
+
 89519 - Pedro Jose Pereira Elias
 
 # Usage
