@@ -5,7 +5,7 @@ SOURCES = tcp.c udp.c user.c
 SOURCES+=
 OBJS = $(SOURCES:%.c=%.o)
 CC   = gcc
-CFLAGS =-Wall -g -std=gnu99 -I../
+CFLAGS =-Wall -g -w -std=gnu99 -I../
 LDFLAGS=-lm
 TARGET = user
 

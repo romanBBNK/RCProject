@@ -148,7 +148,6 @@ int main(int argc, char *argv[]){
                 perror("Failed to create new process.");
                 exit(1);
             } else if (pid == 0) {
-            	printf("%s\n", "child created");
 				
 				char* ptr = buffer;
 				int toRead = 4; //para ler comando

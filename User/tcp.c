@@ -44,7 +44,6 @@ void readTokenFromServer(int fd, int n, char *buffer){
 	char caracter[2];
 	while(1) {
 		n = read(fd, caracter, 1);
-		printf("-%s-\n", caracter);
 		if(n == -1)
 			exit(1);
 		if((strcmp(caracter, " ") == 0) || (strcmp(caracter, "\n") == 0))
@@ -60,7 +59,6 @@ void writeTokenToServer(int fd, int n, char *buffer) {
 		n = write(fd, ptr, toSend);
 		if(n == -1)
 			exit(1);
-		printf("%s", ptr);
 		toSend -= n;
 		ptr += n;
 	}
@@ -74,7 +72,6 @@ void writeTokenToServer2(int fd, int n, char *buffer, int size) {
 		n = write(fd, ptr, toSend);
 		if(n == -1)
 			exit(1);
-		printf("%s", ptr);
 		toSend -= n;
 		ptr += n;
 	}
@@ -125,7 +122,6 @@ void writeToFile2(int fd, int n, char *buffer, char *filePath, int size){
 		if(n == -1)
 			exit(1);
 		fwrite(buffer, 1, n, f);
-		printf("%s", buffer);
 		toSend -= n;
 		alreadyReceived += n;
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
@@ -147,22 +143,18 @@ void writeFromFile(int fd, int n, char *buffer, char *filePath, int size){
 		if (toSend < BUFFERSIZE){
 			n=toSend;
 			fread(buffer, 1, toSend, f);
-			//printf("\nREADbuffer->//INICIO// %s //FIM//\n",buffer);
 			//n = write(fd, buffer, toSend);
 			writeTokenToServer(fd, n, buffer);
 		} else {
 			n=BUFFERSIZE;
 			fread(buffer, 1, BUFFERSIZE, f);
-			//printf("\nREADbuffer->//INICIO// %s //FIM//\n",buffer);
 			//n = write(fd, buffer, BUFFERSIZE);
 			writeTokenToServer(fd, n, buffer);
 		}
 		if(n == -1)
 			exit(1);
 		toSend -= n;
-		//printf("toSend ->%d\n", toSend);
 		alreadyReceived += n;
-		//printf("alreadyReceived ->%d\n", alreadyReceived);
 		memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
 	}
 	fclose(f);
@@ -182,13 +174,11 @@ void writeFromFile2(int fd, int n, char *buffer, char *filePath, int size){
 		if (toSend < BUFFERSIZE){
 			n=toSend;
 			fread(buffer, 1, toSend, f);
-			//printf("\nREADbuffer->//INICIO// %s //FIM//\n",buffer);
 			//n = write(fd, buffer, toSend);
 			writeTokenToServer2(fd, n, buffer, toSend);
 		} else {
 			n=BUFFERSIZE;
 			fread(buffer, 1, BUFFERSIZE, f);
-			//printf("\nREADbuffer->//INICIO// %s //FIM//\n",buffer);
 			//n = write(fd, buffer, BUFFERSIZE);
 			writeTokenToServer2(fd, n, buffer, BUFFERSIZE);
 		}
@@ -281,7 +271,6 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 	strcat(buffer, question);
 	strcat(buffer, "\n");
 
-	printf("%s\n", buffer);
 
 	char* ptr = buffer;
 	int toSend = strlen(buffer);
@@ -316,7 +305,6 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 		strcat(qUserID, caracter);
 	}
 
-	printf("qUserID -> %s\n", qUserID);
 
 	//qsize
 	readTokenFromServer(newfd, n, buffer);
@@ -324,7 +312,6 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 
 	int qsize = atol(buffer);
 
-	printf("qsize -> %d\n", qsize);
 
 	//write to file qdata
 	generateFilePath(topic, question, NULL, NULL, targetPath);
@@ -339,7 +326,6 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 
 	int qIMG = atol(buffer);
 
-	printf("qIMG -> %d\n", qIMG);
 
 	if (qIMG){
 		//qiext
@@ -347,14 +333,12 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 
 		strcpy(extension, buffer);
 		
-		printf("qiext -> %s\n", extension);
 
 		//isize
 		readTokenFromServer(newfd, n, buffer);
 
 		int qisize = atol(buffer);
 
-		printf("qisize -> %d\n", qisize);
 
 		generateFilePath(topic, question, NULL, extension, targetPath);
 		writeToFile2(newfd, n, buffer, targetPath, qisize);
@@ -369,8 +353,7 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 
 	int n_ans = atol(buffer);
 
-	printf("N -> %d\n", n_ans);
-	
+
 	char* aUserID = (char *)malloc(5*sizeof(char));
 	for (int i=0; i<n_ans; i++){
 		//AN
@@ -380,20 +363,17 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 		strcat(answerName, "_");
 		strcat(answerName, answerID);
 		
-		printf("AN -> %s\n", answerID);
 
 		//aUserID
 		readTokenFromServer(newfd, n, buffer);
 
 		strcpy(aUserID, buffer);
-		printf("aUserID -> %s\n", aUserID);
 
 		//asize
 		readTokenFromServer(newfd, n, buffer);
 
 		int asize = atol(buffer);
 
-		printf("asize -> %d\n", asize);
 
 		generateFilePath(topic, question, answerName, NULL, targetPath);
 		writeToFile(newfd, n, buffer, targetPath, asize);
@@ -406,21 +386,18 @@ void question_get(int newfd, int addrlen, int n, struct addrinfo *res, struct so
 
 		int aIMG = atol(buffer);
 		
-		printf("aIMG -> %d\n", aIMG);
 		if (aIMG){
 			//aiext
 			readTokenFromServer(newfd, n, buffer);
 
 			strcpy(extension, buffer);
 
-			printf("aiext -> %s\n", extension);
 
 			//aisize
 			readTokenFromServer(newfd, n, buffer);
 
 			int aisize = atol(buffer);
 
-			printf("aisize -> %d\n", aisize);
 
 			generateFilePath(topic, question, answerName, extension, targetPath);
 			writeToFile2(newfd, n, buffer, targetPath, aisize);
@@ -557,10 +534,8 @@ void answer_submit(int fd, int addrlen, int n, struct addrinfo *res, struct sock
 
 	//read info from the server token by token
 	readTokenFromServer(fd, n, buffer);
-	printf("%s", buffer);
 	readTokenFromServer(fd, n, buffer);
-	printf("%s\n", buffer);
-	
+
 	if ((strcmp(buffer, "OK") == 0)) {
 		write(1, "Answer was successfully created\n", 32);
 	} else if ((strcmp(buffer, "FUL") == 0)) {
