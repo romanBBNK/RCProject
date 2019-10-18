@@ -277,7 +277,6 @@ int getLastQuestionList(char *buffer, char *topicName){
         current = current->next;
     }
     return 0;
-
 }
 int saveNewQuestion(struct topic* parentTopic, char *Title, char *Author, char *imgExt){
 
@@ -519,11 +518,20 @@ int retrieveStoredData(){
         readTopicAuthor[readAuthor - 1] = '\0';
 
         //Saves the topic and calls the function to pursue questions related to the topic
-        if( (currentTopic = addNewTopic(readTopicName, readTopicAuthor))->number == 0){
-            printf("Error adding topic to memory.\n");
-            exit(-1);
+        currentTopic = addNewTopic(readTopicName, readTopicAuthor);
+        if(currentTopic->number != 0){
+            //Completely new topic
+            retrieveStoredQuestions(currentTopic);
+        } else {
+            if(currentTopic->question_counter==2){
+                //Duplicate addition of topic
+                retrieveStoredQuestions( getTopic(readTopicName) );
+            } else {
+                //Error adding topic because topiclist is full
+                printf("Error adding topic to memory\n");
+                exit(-1);
+            }
         }
-        retrieveStoredQuestions(currentTopic);
 
         //Resets the buffers used
         memset(readTopicName, 0, 12);
@@ -587,12 +595,21 @@ int retrieveStoredQuestions(struct topic* currentTopic){
         readQstAuthor[readAuthor - 1] = '\0';
         readImgPath[readImage - 1] = '\0';
 
-        //Saves the question and calls the function to pursue answers related to the question
-        if( (currentQuestion = addNewQuestion(currentTopic, readQstTitle, readQstAuthor, readImgPath))->number == 0){
-            printf("Error adding question to memory.\n");
-            exit(-1);
+        //Saves the topic and calls the function to pursue answers related to the question
+        currentQuestion = addNewQuestion(currentTopic, readQstTitle, readQstAuthor, readImgPath);
+        if(currentQuestion->number != 0){
+            //Completely new question
+            retrieveStoredAnswers(currentTopic, currentQuestion);
+        } else {
+            if(currentQuestion->replies_number==2){
+                //Duplicate addition of question
+                retrieveStoredAnswers(currentTopic, getQuestion(currentTopic->name, readQstTitle, 0) );
+            } else {
+                //Error adding question because question list is full
+                printf("Error adding question to memory\n");
+                exit(-1);
+            }
         }
-        retrieveStoredAnswers(currentTopic, currentQuestion);
 
         //Resets the buffers used
         memset(readQstTitle, 0, 12);
@@ -660,10 +677,16 @@ int retrieveStoredAnswers(struct topic* currentTopic, struct question* currentQu
         readAnsAuthor[readAuthor - 1] = '\0';
         readImgPath[readImage - 1] = '\0';
 
-        //Saves the topic and calls the function to pursue questions related to the topic
-        if( (currentAnswer = addNewAnswer(currentQuestion, readAnsName, readAnsAuthor, readImgPath))->name == NULL){
-            printf("Error adding answer to memory.\n");
-            exit(-1);
+
+        //Saves the answer
+        currentAnswer = addNewAnswer(currentQuestion, readAnsName, readAnsAuthor, readImgPath);
+        if(currentAnswer->name == NULL){
+            //Error adding
+            if(currentAnswer->number != 2){
+                //Error adding question because question list is full
+                printf("Error adding question to memory\n");
+                exit(-1);
+            }
         }
 
         //Resets the buffers used
