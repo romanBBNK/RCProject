@@ -374,10 +374,13 @@ struct answer* addNewAnswer(struct question* parentQuestion, char *Name, char *A
         parentQuestion->answers = newAnswer;
         parentQuestion->replies_number = parentQuestion->replies_number + 1;
     } else{
-        (parentQuestion->answers)->next = newAnswer;
+        current = parentQuestion->answers;
+        while(current->next!=NULL){
+            current = current->next;
+        }
+        current->next = newAnswer;
         parentQuestion->replies_number = parentQuestion->replies_number + 1;
     }
-
     return newAnswer;
 }
 struct answer* getAnswer(char *parentTopic, char *parentQuestion, int answerNumber){
@@ -409,7 +412,7 @@ int saveNewAnswer(char *parentTopic, struct question* parentQuestion, char *Auth
     } else { strcat(answerName, "_"); }
     sprintf(numBuf, "%d", parentQuestion->replies_number + 1);
     strcat(answerName, numBuf);
-    
+
     if(imgExt==NULL) {
         //Adds the answer to program memory
         if ((currentAnswer = addNewAnswer(parentQuestion, answerName, Author, "NULL"))->name == NULL)
