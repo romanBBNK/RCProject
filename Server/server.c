@@ -67,15 +67,6 @@ int main(int argc, char *argv[]){
 	hintsTCP.ai_flags=AI_PASSIVE|AI_NUMERICSERV;
 
 	retrieveStoredData();
-	retrieveStoredData();
-    //saveNewQuestion(getTopic("ExTopic1"), "Putas", "12245", NULL);
-    //addNewQuestion(getTopic("ExTopic1"), "Putassa", "22450", "NULL");
-    getQuestionList(buffer, "ExTopic1");
-    printf("%s\n", buffer);
-    printf("First answer's title is: %s\n", ( getAnswer("ExTopic1", "ExQuest1", 1))->name);
-    //saveNewQuestion(getTopic("ExTopic1"), "Putaria", "12254", "png");
-    //getQuestionList(buffer, "ExTopic1");
-    //printf("%s\n", buffer);
 
 	parseArgs(argc, (char** const)argv);
 
@@ -146,16 +137,17 @@ int main(int argc, char *argv[]){
 			} else if ((strcmp(parse, "PTP") == 0)){
 				topic_propose(fd, addrlen, n, addr, buffer, parse);
 			} else if ((strcmp(parse, "LQU") == 0)){
+				retrieveStoredData();
 				question_list(fd, addrlen, n, addr, buffer, parse);
 			}
 		} else if (FD_ISSET(fdTCP, &rset)){
 			if((newfd=accept(fdTCP,(struct sockaddr*)&addrTCP, &addrlenTCP)) == -1)
 				exit(1);
 
-			/*if ((pid = fork()) < 0) {
+			if ((pid = fork()) < 0) {
                 perror("Failed to create new process.");
                 exit(1);
-            } else if (pid == 0) {*/
+            } else if (pid == 0) {
             	printf("%s\n", "child created");
 				
 				char* ptr = buffer;
@@ -173,13 +165,10 @@ int main(int argc, char *argv[]){
 					question_get(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
 				} else if ((strcmp(buffer, "QUS ") == 0)) {
 					question_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
-					memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
-					getQuestionList(buffer, "wifi");
-					printf("\nbuffer2:\n%s\n\n", buffer);
 				} else if ((strcmp(buffer, "ANS ") == 0)) {
 					answer_submit(fdTCP, addrlenTCP, nTCP, buffer, parse, newfd);
 				}
-            //}
+            }
 			close(newfd);
 		}
 	}

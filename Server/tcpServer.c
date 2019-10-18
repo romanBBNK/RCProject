@@ -40,7 +40,7 @@ int sizeOfFile2(char* name){
 
 void readTokenFromServer(int fd, int n, char *buffer){
 	memset(buffer, '\0', sizeof(char)*BUFFERSIZE);
-	char caracter[1];
+	char caracter[2];
 	while(1) {
 		n = read(fd, caracter, 1);
 		if(n == -1)
