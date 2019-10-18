@@ -67,10 +67,12 @@ int main(int argc, char *argv[]){
 	hintsTCP.ai_flags=AI_PASSIVE|AI_NUMERICSERV;
 
 	retrieveStoredData();
+	retrieveStoredData();
     //saveNewQuestion(getTopic("ExTopic1"), "Putas", "12245", NULL);
     //addNewQuestion(getTopic("ExTopic1"), "Putassa", "22450", "NULL");
     getQuestionList(buffer, "ExTopic1");
     printf("%s\n", buffer);
+    printf("First answer's title is: %s\n", ( getAnswer("ExTopic1", "ExQuest1", 1))->name);
     //saveNewQuestion(getTopic("ExTopic1"), "Putaria", "12254", "png");
     //getQuestionList(buffer, "ExTopic1");
     //printf("%s\n", buffer);
