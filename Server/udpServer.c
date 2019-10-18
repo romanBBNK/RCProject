@@ -81,7 +81,7 @@ void question_list(int fd, int addrlen, int n, struct sockaddr_in addr, char *bu
 	write(1, parse, strlen(parse));
 	write(1,"\n",1);
 
-	getQuestionList(buffer, parse);
+	getLastQuestionList(buffer, parse);
 	strcat(buffer, "\n");
 
 
